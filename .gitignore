@@ -1,6 +1,6 @@
-.settings/
-.project
-.classpath
+#.settings/
+#.project
+#.classpath
 
 # Eclipse and text editor stuff
 .metadata
