@@ -1,0 +1,24 @@
+{
+  "name": "homebase",
+  "description": "A smart home utility powered by LEAP",
+  "main": "src/index.html",
+  "authors": [
+    "dgattey"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/dgattey/homebase",
+  "moduleType": [],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "~1.2.3",
+    "leapjs": "~0.6.4",
+    "leapjs-plugins": "~0.1.11"
+  }
+}
