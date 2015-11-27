@@ -1,0 +1,21 @@
+.settings/
+.project
+.classpath
+
+# Eclipse and text editor stuff
+.metadata
+.loadpath
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+
+# Eclipse paths
+*.launch
+.cproject
+.factorypath
+.buildpath
+.target
+.texlipse
+.springBeans
