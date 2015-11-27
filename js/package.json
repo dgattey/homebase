@@ -1,0 +1,10 @@
+{
+  "name": "homebase",
+  "version": "0.0.1",
+  "repository": "https://github.com/dgattey/homebase.git",
+  "description": "A smart home utility powered by LEAP",
+  "author": "dgattey",
+  "dependencies": {
+    "leapjs": "^0.6.4"
+  }
+}
