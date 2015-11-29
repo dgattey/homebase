@@ -118,11 +118,20 @@ function html() {
     .pipe(sort({
         // Makes sure app.js appears at the very end
         comparator: function(file1, file2) {
+            // Make sure app is last
             if (file1.path.indexOf('app.js') > -1) {
                 return 1;
             }
             if (file2.path.indexOf('app.js') > -1) {
                 return -1;
+            }
+
+            // Make sure main leapjs is first
+            if (file1.path.indexOf('leapjs/') > -1) {
+                return -1;
+            }
+            if (file2.path.indexOf('leapjs/') > -1) {
+                return 1;
             }
             return 0;
         }
@@ -190,10 +199,10 @@ gulp.task('watch', ['build'], function () {
     livereload: true,
     port: 8888
   });
-  watch(cfg.app.sass, function(){go('sass', sass)});
-  watch(cfg.app.js, function(){go('js', js)});
-  watch(cfg.app.rootHtml, function(){go('html', html)});
-  watch(cfg.app.assets, function(){go('assets', assets)});
+  watch(cfg.app.sass, function(){go('sass', sass);});
+  watch(cfg.app.js, function(){go('js', js);});
+  watch(cfg.app.rootHtml, function(){go('html', html);});
+  watch(cfg.app.assets, function(){go('assets', assets);});
   watch(cfg.config, quit);
 });
 
