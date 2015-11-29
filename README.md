@@ -13,3 +13,40 @@ We're using a Node.js environment, with Google's Polymer as a frontend library a
 
 ### Development
 No need to refresh the page! Make a change to any files and Gulp will recompile that file and reload the page for you automatically. Gulp runs a server on port 8888 on localhost. There's a gulpfile.js and build.config.js file that both control how Gulp does its thing. Any changes to those and you'll have to restart Gulp. Shouldn't need to change it too often though. All code is in src/. We're using SASS for easier CSS rules, and Google's Polymer for easier JS/HTML coding.
+
+### TODO
+Core
+
+Design Stuff
+. 7 mockup pages
+. base mockup (with 3 apps)
+. music mockup
+. thermostat mockup
+. lights mockup
+. Reddit feedback on design - Baldock
+
+Coding Stuff
+. floor plan creation
+. menu interface creation
+. menu creation for each page
+. room selection with click
+. intensity dial
+. detail page for each app
+. temperature timeline
+. Spotify integration
+. song change
+. volume slider
+. pause/play
+. mood slider
+. individual light selection
+. intensity/color sliders
+
+
+Finishing Stuff
+. Make slides
+. Make and practice a presentation (150 seconds exactly)
+. Link to comments about work after Reddit post
+. host (Dylan)
+
+Maybe Later
+. multiple room selection
