@@ -1,21 +1,8 @@
-#.settings/
-#.project
-#.classpath
+# Temporary folders
+node_modules
+bower_components
+build
 
-# Eclipse and text editor stuff
-.metadata
-.loadpath
-bin/
-tmp/
-*.tmp
-*.bak
-*.swp
-
-# Eclipse paths
-*.launch
-.cproject
-.factorypath
-.buildpath
-.target
-.texlipse
-.springBeans
+# Temp files
+.DS_Store
+.swp

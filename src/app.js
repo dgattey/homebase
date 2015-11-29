@@ -37,10 +37,13 @@ var Cat = function() {
     };
 
     cat.setTransform = function(position, rotation) {
+        var scale = (position[2] < 0 ? 0 : position[2]) / 100.0;
         img.style.left = position[0] - img.width  / 2 + 'px';
         img.style.top  = position[1] - img.height / 2 + 'px';
-        img.style.transform = 'rotate(' + -rotation + 'rad)';
-        img.style.webkitTransform = img.style.MozTransform = img.style.msTransform =
+        img.style.transform = 'rotate(' + -rotation + 'rad) scale(' + scale + ')';
+        img.style.webkitTransform =
+        img.style.MozTransform =
+        img.style.msTransform =
         img.style.OTransform = img.style.transform;
     };
 };
