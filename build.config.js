@@ -52,7 +52,8 @@ module.exports = {
     js: [
       'webcomponentsjs/webcomponents.js',
       'leapjs/leap-*.min.js',
-      'leapjs-plugins/**/leap-plugins-*.min.js'
+      'leapjs-plugins/**/leap-plugins-*.min.js',
+      'fabric.js/**/fabric.min.js'
     ],
     map:[
     ],
