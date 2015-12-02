@@ -16,7 +16,13 @@ We're using a Node.js environment, with Google's Polymer as a frontend library a
 No need to refresh the page! Make a change to any files and Gulp will recompile that file and reload the page for you automatically. Gulp runs a server on port 8888 on localhost. There's a gulpfile.js and build.config.js file that both control how Gulp does its thing. Any changes to those and you'll have to restart Gulp. Shouldn't need to change it too often though. All code is in src/. We're using SASS for easier CSS rules, and Google's Polymer for easier JS/HTML coding.
 
 ### TODO
-Core
+FOR END OF DAY WEDNESDAY:
+  Have JSFiddle version completed (at least visually) for use in slides
+  Dylan: menu interface and menu page creation 
+  Sam: Lighting interface
+  Colby: Zoom into room
+  Wes: Putting Buttons on Canvas - mood buttons and song icon
+  Alex: Start slides/Reddit/Presentation
 
 Coding Stuff
 - menu interface creation
