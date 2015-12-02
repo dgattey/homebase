@@ -18,29 +18,20 @@ No need to refresh the page! Make a change to any files and Gulp will recompile 
 ### TODO
 Core
 
-Design Stuff
-- 7 mockup pages
-- base mockup (with 3 apps)
-- music mockup
-- thermostat mockup
-- lights mockup
-- Reddit feedback on design - Baldock
-
 Coding Stuff
-- floor plan creation
 - menu interface creation
 - menu creation for each page
-- room selection with click
+- room zoom with click
 - intensity dial
 - detail page for each app
 - temperature timeline
 - Spotify integration
 - song change
-- volume slider
 - pause/play
-- mood slider
+- mood scroll selection
 - individual light selection
-- intensity/color sliders
+- intensity/color sliders for lights
+- gesture based commands
 
 Finishing Stuff
 - Make slides
