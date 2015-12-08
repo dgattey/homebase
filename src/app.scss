@@ -2,3 +2,59 @@
  * HOMEBASE
  * Contains all styles for homebase, compiled from scss to css
  */
+
+svg.app-menu {
+    pointer-events: none;
+    max-width: 100px;
+    position: absolute;
+    z-index: 999;
+    fill: hsl(220, 60%, 65%);
+
+// Individual options
+& path {
+    pointer-events: auto;
+    &:hover {
+        fill: hsl(220, 60%, 60%);
+    }
+}
+
+// The menu button
+& #toggle {
+    pointer-events: auto;
+    fill: hsl(220, 50%, 43%);
+    &:hover {
+        fill: hsl(220, 50%, 38%);
+    }
+}
+}
+
+svg #options path {
+    transition: 0.3s transform;
+}
+
+svg #options path#right {
+    transform: rotate(-180deg);
+    -ms-transform: rotate(-180deg);
+    -webkit-transform: rotate(-180deg);
+}
+
+svg #options path#left {
+    transform: rotate(180deg);
+    -ms-transform: rotate(180deg);
+    -webkit-transform: rotate(180deg);
+}
+
+svg #options path#center {
+    transition: 0.32s transform;
+    transform: translate(-150px, -150px);
+    -ms-transform: translate(-150px, -150px);
+    -webkit-transform: translate(-150px, -150px);
+}
+
+svg #options.toggle-app-menu {
+    & path#left, & path#right, & path#center {
+        transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+    }
+}

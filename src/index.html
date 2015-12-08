@@ -8,13 +8,35 @@
   <!-- inject:css -->
   <!-- endinject -->
 
-  <!-- Templates for Polymer -->
   <!-- inject:html -->
   <!-- endinject -->
 </head>
 
 <body>
-  <p>Cat demo!</p>
+  <!-- Menu in upper left -->
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" x="0" y="0" viewBox="0 0 200.4 199.6" xml:space="preserve" class="app-menu">
+
+    <!-- Options (3 buttons that pop out) -->
+    <g id="options">
+      <path onclick="changeMode(0)" id="left" d="M0 199.6c34.7 0 68-9.1 96.5-25l-40.1-72c-16.6 9.4-35.6 14.7-56.4 14.7V199.6z" />
+      <path onclick="changeMode(1)" id="center" d="M175 96.9l-72.1-40c-10.3 18.7-25.6 34.1-44.1 44.6l40 72C130.8 155.6 157.2 129 175 96.9z" />
+      <path onclick="changeMode(2)" id="right" d="M118 0c0 19.8-5.1 38.1-14.1 54.4L176 94.6c15.6-28.1 24.4-61 24.4-94.6H118z" />
+    </g>
+
+    <!-- Main/toggle button -->
+    <path onclick="toggleAppMenu()" id="toggle" d="M115.3 0C115.3 63.7 63 115.4 0 115.4V0L115.3 0z" />
+  </svg>
+
+  <!-- Has all floor plans -->
+  <canvas id="c" width="500" height="350"></canvas>
+
+  <p>Floor:</p>
+  <select id="floor">
+    <option value="1">1</option>
+    <option value="2">2</option>
+  </select>
+  <p id="mode"></p>
+  <input id="slider" type="range">
 
   <!-- inject:js -->
   <!-- endinject -->
