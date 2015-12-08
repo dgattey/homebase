@@ -65,6 +65,7 @@ function markIntersections(touchData) {
 Leap.loop(function(frame) {
     // 10 finger max
     // Creates a pointer for each hand and positions them
+    hasPointer = false;
     for (var f = 0; f < 10; f++) {
         var finger = frame.fingers[f];
         var p = currPointers[f];
@@ -73,9 +74,12 @@ Leap.loop(function(frame) {
             if (!p) p = currPointers[f] = new Pointer();
             var data = p.getPositionAndRadius(finger);
             p.show(finger.touchZone, data);
+            if (finger.touchZone != 'none') hasPointer = true;
             if (finger.touchZone == 'touching') markIntersections(data);
         }
     }
+    // If no fingers at all, deselect room
+    if (!hasPointer) deselectRoom();
 
     // If any room intersected, mark it as such
     var hasSelection = false;
@@ -229,6 +233,7 @@ new fabric.Rect({
 ];
 
 document.changeMode = function(index) {
+    deselectRoom();
     mode = index;
     for (var l = 0; l < currLights.length; l++) {
         canvas.remove(currLights[l]);
@@ -355,6 +360,8 @@ function selectRoom(targetedRoom) {
 }
 
 function deselectRoom() {
+    if (!bigRoom) return;
+
     for (var r = 0; r < floors[floor.selectedIndex].length; r++) {
         var room = floors[floor.selectedIndex][r];
         room.set('fill', room.priorColor);

@@ -1,7 +1,6 @@
 var gulp        = require('gulp'),
     gutil       = require('gulp-util'),
     gsass       = require('gulp-sass'),
-    inject      = require('gulp-inject'),
     watch       = require('gulp-watch'),
     minifyHtml  = require('gulp-minify-html'),
     concat      = require('gulp-concat'),
@@ -135,9 +134,6 @@ function html() {
         }
     }));
   return gulp.src(cfg.app.rootHtml)
-    .pipe(inject(combo, {
-      ignorePath: cfg.build
-    }))
     .pipe(cfg.production ? minifyHtml({
         empty: true,
         spare: true,
