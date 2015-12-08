@@ -1,6 +1,7 @@
 var mode = 0;
 var currLights = [];
 var currPointers = [];
+var floors = [];
 var canvas = new fabric.Canvas('c', {
     selection: false
 });
@@ -16,25 +17,29 @@ var Pointer = function() {
     });
 
     // Move positions on the canvas and shows circle
-    this.show = function(finger) {
+    this.show = function(touchZone, data) {
         // Not pointing toward canvas
-        if (finger.touchZone == 'none') return;
-
-        var x = canvas.width/2 + finger.stabilizedTipPosition[0];
-        var y = canvas.height - finger.stabilizedTipPosition[1];
-        var radius = (finger.touchDistance + 1.5) * 10.0;
+        if (touchZone == 'none') return;
 
         // Determine if the finger is touching or not
-        var touching = finger.touchZone == 'touching';
+        var touching = touchZone == 'touching';
         var color = touching ? colors.touch : colors.noTouch;
 
         // Set all
-        circle.set('left', x);
-        circle.set('top', y);
-        circle.set('radius', radius);
+        circle.set('left', data.x);
+        circle.set('top', data.y);
+        circle.set('radius', data.r);
         circle.set('fill', color);
 
         canvas.add(circle);
+    };
+
+    // Gets position and radius converted to canvas coords for a finger
+    this.getPositionAndRadius = function(finger) {
+        var x = canvas.width/2 + finger.stabilizedTipPosition[0];
+        var y = canvas.height - finger.stabilizedTipPosition[1];
+        var radius = (finger.touchDistance + 1.5) * 10.0;
+        return {x: x, y: y, r: radius};
     };
 
     // Remove it from the canvas
@@ -42,6 +47,17 @@ var Pointer = function() {
         canvas.remove(circle);
     };
 };
+
+// Loops through all canvas objects and marks if the touch intersects the room
+function markIntersections(touchData) {
+    var objs = canvas.getObjects();
+    for (var i = objs.length - 1; i >= 0; i--) {
+        var shape = objs[i];
+        if (shape.isType('rect') && shape.containsPoint(new fabric.Point(touchData.x, touchData.y))) {
+            shape.intersects = true;
+        }
+    }
+}
 
 /*
  * LEAP EVENT LOOP - runs on each frame
@@ -55,7 +71,20 @@ Leap.loop(function(frame) {
         if (p) p.hide();
         if (finger) {
             if (!p) p = currPointers[f] = new Pointer();
-            p.show(finger);
+            var data = p.getPositionAndRadius(finger);
+            p.show(finger.touchZone, data);
+            if (finger.touchZone == 'touching') markIntersections(data);
+        }
+    }
+
+    // If any room intersected, mark it as such
+    for (var i = floors.length - 1; i >= 0; i--) {
+        for (var j = floors[i].length - 1; j >= 0; j--) {
+            var room = floors[i][j];
+            if (room.intersects) {
+                // TODO: select
+            }
+            room.intersects = false;
         }
     }
     // canvas.renderAll.bind(canvas);
@@ -94,7 +123,7 @@ if (mode === 0) {
 }
 
 // Define rooms
-var floors = [
+floors = [
 [new fabric.Rect({
     width: 180,
     height: 100,
