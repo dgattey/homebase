@@ -1,30 +1,71 @@
-/*
-* THE EVENT LOOP - runs on each frame
-*/
-// Leap.loop(function(frame) {
-//     // Creates a cat for each hand and positions them
-//     for (var i = 1; i >= 0; i--) {
-//         var hand = frame.hands[i];
-//         if (!hand && cats[i]) {
-//             cats[i].delete();
-//             cats[i] = undefined;
-//             continue;
-//         } else if (hand) {
-//             var cat = cats[i] || (cats[i] = new Cat());
-//             cat.setTransform(hand.screenPosition(), hand.roll());
-//         }
-//     }
-// }).use('screenPosition', {scale: 0.25});
-
-// // Sets up Leap options
-// Leap.loopController.setBackground(true);
-
-
 var mode = 0;
 var currLights = [];
+var currPointers = [];
+var canvas = new fabric.Canvas('c', {
+    selection: false
+});
+var colors = {
+    touch: 'rgb(0,120,220)',
+    noTouch: 'rgba(200,200,220, 0.8)'
+};
+
+var Pointer = function() {
+    var circle = new fabric.Circle({
+      radius: 10,
+      fill: 'green'
+    });
+
+    // Move positions on the canvas and shows circle
+    this.show = function(finger) {
+        // Not pointing toward canvas
+        if (finger.touchZone == 'none') return;
+
+        var x = canvas.width/2 + finger.stabilizedTipPosition[0];
+        var y = canvas.height - finger.stabilizedTipPosition[1];
+        var radius = (finger.touchDistance + 1.5) * 10.0;
+
+        // Determine if the finger is touching or not
+        var touching = finger.touchZone == 'touching';
+        var color = touching ? colors.touch : colors.noTouch;
+
+        // Set all
+        circle.set('left', x);
+        circle.set('top', y);
+        circle.set('radius', radius);
+        circle.set('fill', color);
+
+        canvas.add(circle);
+    };
+
+    // Remove it from the canvas
+    this.hide = function() {
+        canvas.remove(circle);
+    };
+};
+
+/*
+ * LEAP EVENT LOOP - runs on each frame
+ */
+Leap.loop(function(frame) {
+    // 10 finger max
+    // Creates a pointer for each hand and positions them
+    for (var f = 0; f < 10; f++) {
+        var finger = frame.fingers[f];
+        var p = currPointers[f];
+        if (p) p.hide();
+        if (finger) {
+            if (!p) p = currPointers[f] = new Pointer();
+            p.show(finger);
+        }
+    }
+    // canvas.renderAll.bind(canvas);
+}).use('screenPosition', {scale: 0.25});
+
+// Sets up Leap options
+Leap.loopController.setBackground(true);
 
 // For the top left menu
-document.toggleAppMenu = function() {
+var toggleAppMenu = function() {
     var toggleClass = "toggle-app-menu";
     var optionsClasses = document.getElementById("options").classList;
     if (optionsClasses.contains(toggleClass)) {
@@ -33,10 +74,6 @@ document.toggleAppMenu = function() {
         optionsClasses.add(toggleClass);
     }
 };
-
-var canvas = new fabric.Canvas('c', {
-    selection: false
-});
 
 // Set slider initially
 if (mode === 0) {
@@ -174,7 +211,7 @@ document.changeMode = function(index) {
         canvas.add(r);
         if (activeRoom) {
             canvas.setActiveObject(r);
-        }    
+        }
         if (mode == 1 && r.lights !== undefined) {
             addLights(r);
         }
@@ -319,7 +356,7 @@ function addLights(r) {
             originY: 'top'
         });
         canvas.add(cir);
-        currLights.push(cir);        
+        currLights.push(cir);
     }
 }
 
@@ -338,13 +375,13 @@ function moveSlider() {
             setColor(object);
         } else {
             if (mode == 1) {
-// need to update light in actual room
-// object.set({ strokeWidth: l.brightness/100*l.radius });
-}
-}
-canvas.add(object);
-canvas.setActiveObject(object);
-}
+            // need to update light in actual room
+            // object.set({ strokeWidth: l.brightness/100*l.radius });
+            }
+        }
+        canvas.add(object);
+        canvas.setActiveObject(object);
+    }
 }
 
 function setColor(room) {
@@ -353,30 +390,30 @@ function setColor(room) {
         if (!room.temp) room.set({
             temp: 72
         });
-            frac = (room.temp - 55) / (85 - 55);
-            room.set({
-                fill: rgbToHex(Math.floor(255 * frac), 0, Math.floor(255 * (1 - frac)))
-            });
-        } else if (mode == 1) {
-            room.set({
-                fill: rgbToHex(50, 50, 50)
-            });
-        } else if (mode == 2) {
-            if (!room.vol) room.set({
-                vol: 0
-            });
-                frac = (room.vol) / 100;
-                room.set({
-                    fill: rgbToHex(Math.floor(frac * 129), Math.floor(frac * 183), Math.floor(frac * 26))
-                });
-            }
-        }
+        frac = (room.temp - 55) / (85 - 55);
+        room.set({
+            fill: rgbToHex(Math.floor(255 * frac), 0, Math.floor(255 * (1 - frac)))
+        });
+    } else if (mode == 1) {
+        room.set({
+            fill: rgbToHex(50, 50, 50)
+        });
+    } else if (mode == 2) {
+        if (!room.vol) room.set({
+            vol: 0
+        });
+        frac = (room.vol) / 100;
+        room.set({
+            fill: rgbToHex(Math.floor(frac * 129), Math.floor(frac * 183), Math.floor(frac * 26))
+        });
+    }
+}
 
-        function componentToHex(c) {
-            var hex = c.toString(16);
-            return hex.length == 1 ? "0" + hex : hex;
-        }
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
 
-        function rgbToHex(r, g, b) {
-            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-        }
+function rgbToHex(r, g, b) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
