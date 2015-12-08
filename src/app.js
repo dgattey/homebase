@@ -78,11 +78,13 @@ Leap.loop(function(frame) {
     }
 
     // If any room intersected, mark it as such
+    var hasSelection = false;
     for (var i = floors.length - 1; i >= 0; i--) {
         for (var j = floors[i].length - 1; j >= 0; j--) {
             var room = floors[i][j];
-            if (room.intersects) {
-                // TODO: select
+            if (room.intersects && !hasSelection) {
+                selectRoom(room);
+                hasSelection = true;
             }
             room.intersects = false;
         }
@@ -299,43 +301,40 @@ floor.addEventListener("change", function() {
 });
 
 var bigRoom;
-var color = rgbToHex(108, 108, 108);
-var roomColors = [color, color, color, color, color];
+var gray = rgbToHex(190, 190, 190);
 
-canvas.on('object:selected', function(options) {
-    var currColor;
+canvas.on('object:selected', function(options){
+    selectRoom(options.target);
+});
+canvas.on('selection:cleared', function(options) {
+    deselectRoom();
+});
+
+function selectRoom(targetedRoom) {
     var room;
-    if (options.target == bigRoom){
+    if (targetedRoom == bigRoom){
         return;
     }
-    if (bigRoom !== null){
-        for (room = 0; room < floors[floor.selectedIndex].length; room++) {
-            floors[floor.selectedIndex][room].set({
-                fill: roomColors[room]
-            });
-        }
-        canvas.remove(bigRoom);
-        bigRoom = null;
+    if (bigRoom) {
+        deselectRoom();
     }
 
-    for (room = 0; room < floors[floor.selectedIndex].length; room++) {
-        roomColors[room] = floors[floor.selectedIndex][room].fill;
-        if (floors[floor.selectedIndex][room] == options.target){
-            currColor = roomColors[room];
-        }
-        floors[floor.selectedIndex][room].set({
-            fill: rgbToHex(108, 108, 108)
-        });
+    // Save prior colors & set all current colors to gray
+    for (r = 0; r < floors[floor.selectedIndex].length; r++) {
+        room = floors[floor.selectedIndex][r];
+        if (!room.priorColor) room.priorColor = room.fill;
+        room.set('fill', gray);
     }
+
     var width;
     var height;
-    var widthIfHeightLarger = options.target.getWidth() * (175 / options.target.getHeight());
+    var widthIfHeightLarger = targetedRoom.getWidth() * (175 / targetedRoom.getHeight());
     if (widthIfHeightLarger < 250){
         width = widthIfHeightLarger;
         height = 175;
     }else{
         width = 250;
-        height = options.target.height * (250 / options.target.width);
+        height = targetedRoom.height * (250 / targetedRoom.width);
     }
 
     bigRoom = new fabric.Rect({
@@ -343,7 +342,7 @@ canvas.on('object:selected', function(options) {
         height: height,
         left: 250-width/2,
         top: 175-height/2,
-        fill: currColor,
+        fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
         lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
@@ -353,17 +352,17 @@ canvas.on('object:selected', function(options) {
 
     canvas.add(bigRoom);
     bigRoom.bringToFront();
-});
+}
 
-canvas.on('selection:cleared', function(options) {
-    for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
-        floors[floor.selectedIndex][room].set({
-            fill: roomColors[room]
-        });
+function deselectRoom() {
+    for (var r = 0; r < floors[floor.selectedIndex].length; r++) {
+        var room = floors[floor.selectedIndex][r];
+        room.set('fill', room.priorColor);
+        room.priorColor = undefined;
     }
     canvas.remove(bigRoom);
     bigRoom = null;
-});
+}
 
 // Moving slider (input is not supported in IE10 so need to also do change)
 slider.addEventListener("input", moveSlider);
