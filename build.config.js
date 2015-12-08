@@ -45,21 +45,13 @@ module.exports = {
   vendor: {
     src: 'bower_components',
     html: [
-      'polymer/polymer.html',
-      'polymer/polymer-mini.html',
-      'polymer/polymer-micro.html'
     ],
     js: [
-      'webcomponentsjs/webcomponents.js',
       'leapjs/leap-*.min.js',
       'leapjs-plugins/**/leap-plugins-*.min.js',
       'fabric.js/**/fabric.min.js'
     ],
-    map:[
-    ],
     css:[
-    ],
-    fonts:[
     ]
   }
 };

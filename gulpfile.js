@@ -29,9 +29,7 @@ var gulp        = require('gulp'),
 // Other configuration - makes sure that vendor files work as globs
 cfg.vendor.js = prefixVendor(cfg.vendor.js);
 cfg.vendor.html = prefixVendor(cfg.vendor.html);
-cfg.vendor.map = prefixVendor(cfg.vendor.map);
 cfg.vendor.css = prefixVendor(cfg.vendor.css);
-cfg.vendor.fonts = prefixVendor(cfg.vendor.fonts);
 
 // Prefixes vendor files with their actual location
 function prefixVendor(globArray) {
@@ -191,8 +189,7 @@ gulp.task('js', ['clean', 'vendorJS', 'vendorHTML'], js);
 gulp.task('vendorJS', ['clean'], vendorJS);
 gulp.task('vendorHTML', ['clean'], vendorHTML);
 gulp.task('assets', ['clean', 'vendorJS', 'vendorHTML'], assets);
-gulp.task('fonts', ['clean', 'vendorJS', 'vendorHTML'], fonts);
-gulp.task('html', ['vendorJS', 'vendorHTML', 'js', 'sass', 'assets', 'fonts'], html);
+gulp.task('html', ['vendorJS', 'vendorHTML', 'js', 'sass', 'assets'], html);
 gulp.task('watch', ['build'], function () {
   connect.server({
     root: cfg.build,
