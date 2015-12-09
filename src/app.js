@@ -358,7 +358,7 @@ function selectRoom(targetedRoom) {
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
-        lights: targetedRoom.lights.slice(),
+        lights: JSON.parse(JSON.stringify(targetedRoom.lights)),
         lockMovementX: true,
         lockMovementY: true
     });
@@ -381,7 +381,7 @@ function deselectRoom() {
     if (mode == 1) {
       for (var light = currLights.length - 1; light > currLights.length - 1 - bigRoom.lights.length; light--) {
         canvas.remove(currLights[light]);
-        currLights.splice(light, 1);
+        currLights.splice(currLights[light], 1);
       }
     }
     canvas.remove(bigRoom);
