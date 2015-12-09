@@ -415,7 +415,7 @@ function selectRoom(targetedRoom) {
     if (targetedRoom == bigRoom || targetedRoom.isType("circle")) {
         return;
     }
-    if (bigRoom) {
+    if (bigRoom || !targetedRoom) {
         deselectRoom();
     }
 
@@ -493,7 +493,7 @@ function deselectRoom() {
       }
     }
     canvas.remove(bigRoom);
-    bigRoom = null;
+    bigRoom = undefined;
 }
 
 // Moving slider (input is not supported in IE10 so need to also do change)
