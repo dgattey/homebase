@@ -358,16 +358,20 @@ for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
       roomTitle.set({angle: 90});
     }
     roomTitle.set({
+      // left: floors[floor.selectedIndex][room].left,
+      // top: floors[floor.selectedIndex][room].top,
       left: floors[floor.selectedIndex][room].left + (floors[floor.selectedIndex][room].width / 2),
       top: floors[floor.selectedIndex][room].top + (floors[floor.selectedIndex][room].height / 2),
       originX: 'center',
       originY: 'center'
     });
-    var group = new fabric.Group([floors[floor.selectedIndex][room], roomTitle]);
-    canvas.add(group);
-    // canvas.add(roomTitle);
-    roomGroups.push(group);
-    // canvas.add(floors[floor.selectedIndex][room]);
+    // var group = new fabric.Group([floors[floor.selectedIndex][room], roomTitle]);
+    // canvas.add(group);
+    // roomGroups.push(group); //global tracking of groups
+
+
+    canvas.add(floors[floor.selectedIndex][room]);
+    canvas.add(roomTitle);
 }
 
 // Changing floors
