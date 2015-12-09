@@ -309,7 +309,15 @@ var floor = document.getElementById("floor");
 var prevFloor = floor.selectedIndex;
 for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
     floors[floor.selectedIndex][room].setControlsVisibility({
-        mtr: false
+        mtr: false,
+        bl: false,
+        br: false,
+        tl: false,
+        tr: false,
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false
     });
     setColor(floors[floor.selectedIndex][room]);
     canvas.add(floors[floor.selectedIndex][room]);
@@ -326,7 +334,15 @@ floor.addEventListener("change", function() {
     currLights = [];
     for (room = 0; room < floors[floor.selectedIndex].length; room++) {
         floors[floor.selectedIndex][room].setControlsVisibility({
-            mtr: false
+            mtr: false,
+            bl: false,
+            br: false,
+            tl: false,
+            tr: false,
+            mt: false,
+            mb: false,
+            ml: false,
+            mr: false
         });
         setColor(floors[floor.selectedIndex][room]);
         canvas.add(floors[floor.selectedIndex][room]);
@@ -366,12 +382,15 @@ function selectRoom(targetedRoom) {
     var width;
     var height;
     var widthIfHeightLarger = targetedRoom.getWidth() * (175 / targetedRoom.getHeight());
+    var scale;
     if (widthIfHeightLarger < 250){
         width = widthIfHeightLarger;
         height = 175;
+        scale = 175/targetedRoom.getHeight();
     } else{
         width = 250;
-        height = targetedRoom.height * (250 / targetedRoom.width);
+        height = targetedRoom.height * (250 / targetedRoom.getWidth());
+        scale = 250/targetedRoom.getWidth();
     }
 
     bigRoom = new fabric.Rect({
@@ -382,10 +401,24 @@ function selectRoom(targetedRoom) {
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
-        lights: JSON.parse(JSON.stringify(targetedRoom.lights)),
+        lights: (targetedRoom.lights == undefined) ? [] : JSON.parse(JSON.stringify(targetedRoom.lights)),
         lockMovementX: true,
         lockMovementY: true
     });
+    bigRoom.setControlsVisibility({
+        mtr: false,
+        bl: false,
+        br: false,
+        tl: false,
+        tr: false,
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false
+    });
+    for (var l = 0; l < bigRoom.lights.length; l++) {
+        bigRoom.lights[l].radius = bigRoom.lights[l].radius*scale;
+    }
 
     canvas.add(bigRoom);
     bigRoom.bringToFront();
@@ -439,6 +472,17 @@ function addLights(r, roomIndex) {
             indices: l.indices,
             originX: 'left',
             originY: 'top'
+        });
+        cir.setControlsVisibility({
+            mtr: false,
+            bl: false,
+            br: false,
+            tl: false,
+            tr: false,
+            mt: false,
+            mb: false,
+            ml: false,
+            mr: false
         });
         canvas.add(cir);
         currLights.push(cir);
