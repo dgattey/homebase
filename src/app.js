@@ -155,6 +155,7 @@ if (mode === 0) {
 // Define rooms
 floors = [
   [new fabric.Rect({
+      name: "Living Room",
       width: 180,
       height: 100,
       left: 200,
@@ -167,6 +168,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
+      name: "Kitchen",
       width: 125,
       height: 100,
       left: 70,
@@ -179,6 +181,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
+      name: "Dining Room",
       width: 250,
       height: 50,
       left: 70,
@@ -191,6 +194,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
+      name: "Hallway",
       width: 250,
       height: 100,
       left: 70,
@@ -203,6 +207,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
+      name: "Bathroom",
       width: 55,
       height: 155,
       left: 325,
@@ -320,7 +325,22 @@ for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
         mr: false
     });
     setColor(floors[floor.selectedIndex][room]);
-    canvas.add(floors[floor.selectedIndex][room]);
+    //create room name and group with room
+    var roomTitle = new fabric.Text(floors[floor.selectedIndex][room].name, {fontSize: 18,
+                                                                             fill: '#EEEEEE'});
+    if (floors[floor.selectedIndex][room].name == "Bathroom") { //weird special case for orienting text
+      roomTitle.set({angle: 90});
+    }
+    roomTitle.set({
+      left: floors[floor.selectedIndex][room].left + (floors[floor.selectedIndex][room].width / 2),
+      top: floors[floor.selectedIndex][room].top + (floors[floor.selectedIndex][room].height / 2),
+      originX: 'center',
+      originY: 'center'
+    });
+    var group = new fabric.Group([floors[floor.selectedIndex][room], roomTitle]);
+    canvas.add(group);
+    // canvas.add(roomTitle);
+    // canvas.add(floors[floor.selectedIndex][room]);
 }
 
 // Changing floors
