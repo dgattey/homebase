@@ -426,14 +426,19 @@ function moveSlider() {
         var object = canvas.getActiveObject();
         var isRoom = object.isType("rect");
         if (isRoom) {
-            canvas.remove(object);
+            if (mode != 1) {
+                canvas.remove(object);
+            }
             if (mode == 0) {
                 object.set({ temp: slider.value });
             } else if (mode == 2) {
                 object.set({ vol: slider.value });
             }
-            setColor(object);
-            canvas.add(object);
+            if (mode != 1) {
+                setColor(object);
+                canvas.add(object);
+                canvas.setActiveObject(object);
+            }
         } else {
             if (mode == 1) {
                 var room = floors[floor.selectedIndex][object.indices.roomIndex];
@@ -443,14 +448,14 @@ function moveSlider() {
                                      parseInt(document.getElementById("g").value),
                                      parseInt(document.getElementById("b").value));
                 canvas.remove(currLights[object.indices.currLightIndex]);
-                            currLights[object.indices.currLightIndex].set({
-                strokeWidth: l.brightness/100*l.radius,
-                stroke: l.color
-            });
-             canvas.add(currLights[object.indices.currLightIndex]);
+                currLights[object.indices.currLightIndex].set({
+                    strokeWidth: l.brightness/100*l.radius,
+                    stroke: l.color
+                });
+                canvas.add(currLights[object.indices.currLightIndex]);
+                canvas.setActiveObject(object);
             }
         }
-        canvas.setActiveObject(object);
     }
 }
 
