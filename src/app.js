@@ -130,106 +130,114 @@ if (mode === 0) {
 
 // Define rooms
 floors = [
-[new fabric.Rect({
-    width: 180,
-    height: 100,
-    left: 200,
-    top: 25,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top',
-    lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
-    lockMovementX: true,
-    lockMovementY: true
-}),
-new fabric.Rect({
-    width: 125,
-    height: 100,
-    left: 70,
-    top: 25,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top',
-    lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
-    lockMovementX: true,
-    lockMovementY: true
-}),
-new fabric.Rect({
-    width: 250,
-    height: 50,
-    left: 70,
-    top: 130,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top',
-    lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
-    lockMovementX: true,
-    lockMovementY: true
-}),
-new fabric.Rect({
-    width: 250,
-    height: 100,
-    left: 70,
-    top: 185,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top',
-    lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
-    lockMovementX: true,
-    lockMovementY: true
-}),
-new fabric.Rect({
-    width: 55,
-    height: 155,
-    left: 325,
-    top: 130,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top',
-    lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
-    lockMovementX: true,
-    lockMovementY: true
-})
-],
+  [new fabric.Rect({
+      width: 180,
+      height: 100,
+      left: 200,
+      top: 25,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 10, fracX: 0.75, fracY: 0.5 }],
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      width: 125,
+      height: 100,
+      left: 70,
+      top: 25,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.75 }],
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      width: 250,
+      height: 50,
+      left: 70,
+      top: 130,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      width: 250,
+      height: 100,
+      left: 70,
+      top: 185,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 10, fracX: 0.25, fracY: 0.25 }],
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      width: 55,
+      height: 155,
+      left: 325,
+      top: 130,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+      lockMovementX: true,
+      lockMovementY: true
+    })
+  ],
 
-[new fabric.Rect({
-    width: 150,
-    height: 100,
-    left: 115,
-    top: 75,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top'
-}),
-new fabric.Rect({
-    width: 125,
-    height: 100,
-    left: 275,
-    top: 75,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top',
-    lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }]
-}),
-new fabric.Rect({
-    width: 250,
-    height: 50,
-    left: 150,
-    top: 180,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top'
-}),
-new fabric.Rect({
-    width: 250,
-    height: 100,
-    left: 175,
-    top: 235,
-    fill: rgbToHex(100, 100, 100),
-    originX: 'left',
-    originY: 'top'
-})
-]
+  [new fabric.Rect({
+      width: 150,
+      height: 100,
+      left: 115,
+      top: 75,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      width: 125,
+      height: 100,
+      left: 275,
+      top: 75,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      width: 250,
+      height: 50,
+      left: 150,
+      top: 180,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      width: 250,
+      height: 100,
+      left: 175,
+      top: 235,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lockMovementX: true,
+      lockMovementY: true
+    })
+  ]
 ];
 
 document.changeMode = function(index) {
@@ -249,7 +257,7 @@ document.changeMode = function(index) {
             canvas.setActiveObject(r);
         }
         if (mode == 1 && r.lights !== undefined) {
-            addLights(r);
+            addLights(r, room);
         }
     }
 
@@ -292,14 +300,14 @@ floor.addEventListener("change", function() {
         canvas.remove(currLights[l]);
     }
     currLights = [];
-    for (room = 0; room < floors[floor.selectedIndex].length; room++) {
+    for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
         floors[floor.selectedIndex][room].setControlsVisibility({
             mtr: false
         });
         setColor(floors[floor.selectedIndex][room]);
         canvas.add(floors[floor.selectedIndex][room]);
         if (mode == 1 && floors[floor.selectedIndex][room].lights !== undefined) {
-            addLights(floors[floor.selectedIndex][room]);
+            addLights(floors[floor.selectedIndex][room], room);
         }
     }
     prevFloor = floor.selectedIndex;
@@ -317,7 +325,7 @@ canvas.on('selection:cleared', function(options) {
 
 function selectRoom(targetedRoom) {
     var room;
-    if (targetedRoom == bigRoom){
+    if (targetedRoom == bigRoom || targetedRoom.isType("circle")) {
         return;
     }
     if (bigRoom) {
@@ -337,7 +345,7 @@ function selectRoom(targetedRoom) {
     if (widthIfHeightLarger < 250){
         width = widthIfHeightLarger;
         height = 175;
-    }else{
+    } else{
         width = 250;
         height = targetedRoom.height * (250 / targetedRoom.width);
     }
@@ -350,13 +358,16 @@ function selectRoom(targetedRoom) {
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
-        lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+        lights: targetedRoom.lights.slice(),
         lockMovementX: true,
         lockMovementY: true
     });
 
     canvas.add(bigRoom);
     bigRoom.bringToFront();
+    if (mode == 1) {
+        addLights(bigRoom);
+    }
 }
 
 function deselectRoom() {
@@ -367,6 +378,12 @@ function deselectRoom() {
         room.set('fill', room.priorColor);
         room.priorColor = undefined;
     }
+    if (mode == 1) {
+      for (var light = currLights.length - 1; light > currLights.length - 1 - bigRoom.lights.length; light--) {
+        canvas.remove(currLights[light]);
+        currLights.splice(light, 1);
+      }
+    }
     canvas.remove(bigRoom);
     bigRoom = null;
 }
@@ -375,11 +392,19 @@ function deselectRoom() {
 slider.addEventListener("input", moveSlider);
 slider.addEventListener("change", moveSlider);
 
-function addLights(r) {
+document.getElementById("r").addEventListener("input", moveSlider);
+document.getElementById("r").addEventListener("change", moveSlider);
+document.getElementById("g").addEventListener("input", moveSlider);
+document.getElementById("g").addEventListener("change", moveSlider);
+document.getElementById("b").addEventListener("input", moveSlider);
+document.getElementById("b").addEventListener("change", moveSlider);
+
+function addLights(r, roomIndex) {
     for (var light = 0; light < r.lights.length; light++) {
         var l = r.lights[light];
         if (!l.brightness) l.brightness = 0;
         if (!l.color) l.color = rgbToHex(255, 255, 255);
+        if (!l.indices) l.indices = { roomIndex: roomIndex, lightIndex: light, currLightIndex: currLights.length };
         var cir = new fabric.Circle({
             radius: l.radius,
             left: r.left + r.width*l.fracX - l.radius,
@@ -387,6 +412,7 @@ function addLights(r) {
             fill: rgbToHex(100, 100, 100),
             strokeWidth: l.brightness/100*l.radius,
             stroke: l.color,
+            indices: l.indices,
             originX: 'left',
             originY: 'top'
         });
@@ -398,23 +424,32 @@ function addLights(r) {
 function moveSlider() {
     if (canvas.getActiveObject()) {
         var object = canvas.getActiveObject();
-        var isRoom = object.strokeWidth !== 0;
-        console.log(isRoom);
-        canvas.remove(object);
+        var isRoom = object.isType("rect");
         if (isRoom) {
-            if (mode === 0) {
+            canvas.remove(object);
+            if (mode == 0) {
                 object.set({ temp: slider.value });
             } else if (mode == 2) {
                 object.set({ vol: slider.value });
             }
             setColor(object);
+            canvas.add(object);
         } else {
             if (mode == 1) {
-            // need to update light in actual room
-            // object.set({ strokeWidth: l.brightness/100*l.radius });
+                var room = floors[floor.selectedIndex][object.indices.roomIndex];
+                var l = room.lights[object.indices.lightIndex];
+                l.brightness = slider.value;
+                l.color = rgbToHex(parseInt(document.getElementById("r").value),
+                                     parseInt(document.getElementById("g").value),
+                                     parseInt(document.getElementById("b").value));
+                canvas.remove(currLights[object.indices.currLightIndex]);
+                            currLights[object.indices.currLightIndex].set({
+                strokeWidth: l.brightness/100*l.radius,
+                stroke: l.color
+            });
+             canvas.add(currLights[object.indices.currLightIndex]);
             }
         }
-        canvas.add(object);
         canvas.setActiveObject(object);
     }
 }
