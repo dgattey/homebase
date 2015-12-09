@@ -265,7 +265,6 @@ floors = [
 ];
 
 document.changeMode = function(index) {
-    deselectRoom();
     mode = index;
     for (var l = 0; l < currLights.length; l++) {
         canvas.remove(currLights[l]);
@@ -284,6 +283,7 @@ document.changeMode = function(index) {
             addLights(r, room);
         }
     }
+    deselectRoom();
 
     var slider = document.getElementById("slider");
     if (mode === 0) {
@@ -416,8 +416,12 @@ function selectRoom(targetedRoom) {
         ml: false,
         mr: false
     });
-    for (var l = 0; l < bigRoom.lights.length; l++) {
-        bigRoom.lights[l].radius = bigRoom.lights[l].radius*scale;
+    if (mode == 1) {
+        var bigRoomLightIndex = currLights.length;
+        for (var l = 0; l < bigRoom.lights.length; l++) {
+            bigRoom.lights[l].radius = bigRoom.lights[l].radius*scale;
+            bigRoom.lights[l].indices.currLightIndex = bigRoomLightIndex + l;
+        }
     }
 
     canvas.add(bigRoom);
