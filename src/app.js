@@ -54,9 +54,9 @@ var Pointer = function() {
         this.r = (finger.touchDistance + 1.5) * 10.0;
 
         // In relation to canvas
-        this.percentX = this.x/canvas.width;
-        this.percentY = this.y/canvas.height;
-        this.percentZ = this.z < 0 ? 0 : this.z > 0.85 ? 1 : this.z/0.85;
+        this.percentX = scaleValue(finger.stabilizedTipPosition[0], -300.0, 300.0);
+        this.percentY = scaleValue(finger.stabilizedTipPosition[1], 30.0, 400.0);
+        this.percentZ = scalePercent(this.z/0.85, 0.0, 1.0);
     };
 
     // Remove it from the canvas
@@ -66,9 +66,16 @@ var Pointer = function() {
     };
 };
 
-// Scales percent between a min and max
-function scaleValue(percent, min, max) {
-    return (max - min) * percent + min;
+// Scales percent between a min and max and bounds it
+function scalePercent(percent, min, max) {
+    var value = (max - min) * percent + min;
+    return value < min ? min : value > max ? max : value;
+}
+
+// Scales value between 0 and 1
+function scaleValue(value, min, max) {
+    var percent = (value - min) / (max - min);
+    return percent < 0 ? 0 : percent > 1 ? 1 : percent;
 }
 
 // Loops through all canvas objects and marks if the touch intersects the room
@@ -112,7 +119,11 @@ Leap.loop(function(frame) {
             if (p.isTouching) isSelecting = true;
 
             // TODO: If we're hovering with one hand, move sliders based on hand position
-            if (p.isHovering) console.log(p.z, p.percentZ);
+            if (p.isHovering) {
+                var slider = document.getElementById("slider");
+                slider.value = scalePercent(p.percentY, slider.min*1.0, slider.max*1.0);
+                moveSlider();
+            }
         }
     }
 
@@ -414,7 +425,7 @@ function selectRoom(targetedRoom) {
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
-        lights: (targetedRoom.lights == undefined) ? [] : JSON.parse(JSON.stringify(targetedRoom.lights)),
+        lights: (targetedRoom.lights === undefined) ? [] : JSON.parse(JSON.stringify(targetedRoom.lights)),
         lockMovementX: true,
         lockMovementY: true
     });
@@ -507,8 +518,8 @@ function addLights(r, roomIndex) {
 }
 
 function moveSlider() {
-    if (canvas.getActiveObject()) {
-        var object = canvas.getActiveObject();
+    var object = canvas.getActiveObject() || bigRoom;
+    if (object) {
         var isRoom = object.isType("rect");
         if (isRoom) {
             if (mode != 1) {
