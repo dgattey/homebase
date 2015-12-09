@@ -2,6 +2,7 @@ var mode = 0;
 var currLights = [];
 var currPointers = [];
 var floors = [];
+var roomGroups = [];
 var canvas = new fabric.Canvas('c', {
     selection: false
 });
@@ -179,7 +180,7 @@ if (mode === 0) {
 // Define rooms
 floors = [
   [new fabric.Rect({
-      name: "Living Room",
+      name: "Kitchen",
       width: 180,
       height: 100,
       left: 200,
@@ -192,7 +193,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
-      name: "Kitchen",
+      name: "Living Room",
       width: 125,
       height: 100,
       left: 70,
@@ -205,7 +206,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
-      name: "Dining Room",
+      name: "Hallway",
       width: 250,
       height: 50,
       left: 70,
@@ -218,7 +219,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
-      name: "Hallway",
+      name: "Dining Room",
       width: 250,
       height: 100,
       left: 70,
@@ -351,7 +352,8 @@ for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
     setColor(floors[floor.selectedIndex][room]);
     //create room name and group with room
     var roomTitle = new fabric.Text(floors[floor.selectedIndex][room].name, {fontSize: 18,
-                                                                             fill: '#EEEEEE'});
+                                                                             fill: '#FFFFFF',
+                                                                             fontFamily: 'Helvetica'});
     if (floors[floor.selectedIndex][room].name == "Bathroom") { //weird special case for orienting text
       roomTitle.set({angle: 90});
     }
@@ -364,6 +366,7 @@ for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
     var group = new fabric.Group([floors[floor.selectedIndex][room], roomTitle]);
     canvas.add(group);
     // canvas.add(roomTitle);
+    roomGroups.push(group);
     // canvas.add(floors[floor.selectedIndex][room]);
 }
 
