@@ -14,48 +14,76 @@ var Pointer = function() {
     var circle = new fabric.Circle();
 
     // Move positions on the canvas and shows circle
-    this.show = function(touchZone, data) {
-        // Not pointing toward canvas
-        if (touchZone == 'none') return;
+    this.show = function() {
+        if (this.notTouching) return; // Not pointing toward canvas
 
         // Determine if the finger is touching or not
-        var touching = touchZone == 'touching';
-        var color = touching ? colors.touch : colors.noTouch;
+        var color = this.isTouching ? colors.touch : colors.noTouch;
 
         // Set all
-        circle.set('left', data.x);
-        circle.set('top', data.y);
-        circle.set('radius', data.r);
+        circle.set('left', this.x);
+        circle.set('top', this.y);
+        circle.set('radius', this.r);
         circle.set('fill', color);
 
         canvas.add(circle);
+        this.isShown = true;
     };
 
-    // Uses position calculated by getPositionAndRadius and converts to percent of canvas
-    this.getPercentPosition = function(data) {
-        return {x: data.x/canvas.width, y: data.y/canvas.height};
+    // Sets booleans for state and marks intersections or gets positions as needed
+    this.setState = function(touchZone, alreadySelecting) {
+        this.isTouching = touchZone == 'touching';
+        this.isHovering = touchZone == 'hovering';
+        this.notTouching = touchZone == 'none';
+
+        // If the other hand is already selecting, just hover with this one
+        if (alreadySelecting && this.isTouching) {
+            this.isTouching = false;
+            this.isHovering = true;
+        }
+
+        // Only allow one finger to do selections
+        if (this.isTouching && !alreadySelecting) markIntersections(new fabric.Point(this.x, this.y));
     };
 
     // Gets position and radius converted to canvas coords for a finger
     this.getPositionAndRadius = function(finger) {
-        var x = canvas.width/2 + finger.stabilizedTipPosition[0];
-        var y = canvas.height - finger.stabilizedTipPosition[1];
-        var radius = (finger.touchDistance + 1.5) * 10.0;
-        return {x: x, y: y, r: radius};
+        this.x = canvas.width/2 + finger.stabilizedTipPosition[0];
+        this.y = canvas.height - finger.stabilizedTipPosition[1];
+        this.z = finger.touchDistance;
+        this.r = (finger.touchDistance + 1.5) * 10.0;
+
+        // In relation to canvas
+        this.percentX = scaleValue(finger.stabilizedTipPosition[0], -300.0, 300.0);
+        this.percentY = scaleValue(finger.stabilizedTipPosition[1], 30.0, 400.0);
+        this.percentZ = scalePercent(this.z/0.85, 0.0, 1.0);
     };
 
     // Remove it from the canvas
     this.hide = function() {
         canvas.remove(circle);
+        this.isShown = false;
     };
 };
 
+// Scales percent between a min and max and bounds it
+function scalePercent(percent, min, max) {
+    var value = (max - min) * percent + min;
+    return value < min ? min : value > max ? max : value;
+}
+
+// Scales value between 0 and 1
+function scaleValue(value, min, max) {
+    var percent = (value - min) / (max - min);
+    return percent < 0 ? 0 : percent > 1 ? 1 : percent;
+}
+
 // Loops through all canvas objects and marks if the touch intersects the room
-function markIntersections(touchData) {
+function markIntersections(point) {
     var objs = canvas.getObjects();
     for (var i = objs.length - 1; i >= 0; i--) {
         var shape = objs[i];
-        if (shape.isType('rect') && shape.containsPoint(new fabric.Point(touchData.x, touchData.y))) {
+        if (shape.isType('rect') && shape.containsPoint(point)) {
             shape.intersects = true;
         }
     }
@@ -65,47 +93,44 @@ function markIntersections(touchData) {
  * LEAP EVENT LOOP - runs on each frame
  */
 Leap.loop(function(frame) {
-    // 10 finger max
-    // Creates a pointer for each hand and positions them
-    hasPointer = false;
-    selecting = false;
-    positions = [];
-    for (var f = 0; f < 10; f++) {
-        var finger = frame.fingers[f];
+    // Creates a pointer for each finger and positions them
+    var notTouching = true;
+    var isSelecting = false;
+
+    // Grab index finger of first hand and use as pointer
+    for(var f in frame.hands){
         var p = currPointers[f];
         if (p) p.hide();
-        if (finger) {
+
+        // Get data
+        var hand = frame.hands[f];
+        var closedFist = hand.grabStrength > 0.8;
+        var finger = hand.indexFinger;
+        
+        // If there's a finger and no closed fist, show it!
+        if (finger && !closedFist) {
             if (!p) p = currPointers[f] = new Pointer();
-            var data = p.getPositionAndRadius(finger);
-            p.show(finger.touchZone, data);
-            if (finger.touchZone != 'none') hasPointer = true;
-            if (finger.touchZone == 'touching') {
-                selecting = true;
-                markIntersections(data);
-            }
-            if (finger.touchZone == 'hovering') {
-                var pos = p.getPercentPosition(data);
-                positions.push(pos);
+            p.getPositionAndRadius(finger);
+            p.setState(finger.touchZone, isSelecting);
+            p.show();
+
+            // Set global state variables
+            if (!p.notTouching) notTouching = false;
+            if (p.isTouching) isSelecting = true;
+
+            // TODO: If we're hovering with one hand, move sliders based on hand position
+            if (p.isHovering) {
+                var slider = document.getElementById("slider");
+                slider.value = scalePercent(p.percentY, slider.min*1.0, slider.max*1.0);
+                moveSlider();
             }
         }
     }
-    // If no fingers at all, deselect room
-    if (!hasPointer) deselectRoom();
 
-    // If not selecting anything, average positions TODO: and set the slider value 
-    if (!selecting && positions.length > 0) {
-        var x = 0;
-        var y = 0;
-        for (i = positions.length - 1; i >= 0; i--) {
-            x += positions[i].x;
-            y += positions[i].y;
-        }
-        x /= positions.length;
-        y /= positions.length;
-        console.log(x, y);
-    }
+    // If no fingers pointing at all, deselect room
+    if (notTouching) deselectRoom();
 
-    // If any room intersected, mark it as such
+    // If any room was selected, mark it as such
     var hasSelection = false;
     for (var i = floors.length - 1; i >= 0; i--) {
         for (var j = floors[i].length - 1; j >= 0; j--) {
@@ -117,7 +142,6 @@ Leap.loop(function(frame) {
             room.intersects = false;
         }
     }
-    // canvas.renderAll.bind(canvas);
 }).use('screenPosition', {scale: 0.25});
 
 // Sets up Leap options
@@ -421,7 +445,7 @@ function selectRoom(targetedRoom) {
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
-        lights: (targetedRoom.lights == undefined) ? [] : JSON.parse(JSON.stringify(targetedRoom.lights)),
+        lights: (targetedRoom.lights === undefined) ? [] : JSON.parse(JSON.stringify(targetedRoom.lights)),
         lockMovementX: true,
         lockMovementY: true
     });
@@ -514,8 +538,8 @@ function addLights(r, roomIndex) {
 }
 
 function moveSlider() {
-    if (canvas.getActiveObject()) {
-        var object = canvas.getActiveObject();
+    var object = canvas.getActiveObject() || bigRoom;
+    if (object) {
         var isRoom = object.isType("rect");
         if (isRoom) {
             if (mode != 1) {
