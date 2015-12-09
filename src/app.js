@@ -6,15 +6,12 @@ var canvas = new fabric.Canvas('c', {
     selection: false
 });
 var colors = {
-    touch: 'rgb(0,120,220)',
+    touch: '#C31F30',
     noTouch: 'rgba(200,200,220, 0.8)'
 };
 
 var Pointer = function() {
-    var circle = new fabric.Circle({
-      radius: 10,
-      fill: 'green'
-    });
+    var circle = new fabric.Circle();
 
     // Move positions on the canvas and shows circle
     this.show = function(touchZone, data) {
@@ -32,6 +29,11 @@ var Pointer = function() {
         circle.set('fill', color);
 
         canvas.add(circle);
+    };
+
+    // Uses position calculated by getPositionAndRadius and converts to percent of canvas
+    this.getPercentPosition = function(data) {
+        return {x: data.x/canvas.width, y: data.y/canvas.height};
     };
 
     // Gets position and radius converted to canvas coords for a finger
@@ -66,6 +68,8 @@ Leap.loop(function(frame) {
     // 10 finger max
     // Creates a pointer for each hand and positions them
     hasPointer = false;
+    selecting = false;
+    positions = [];
     for (var f = 0; f < 10; f++) {
         var finger = frame.fingers[f];
         var p = currPointers[f];
@@ -75,11 +79,31 @@ Leap.loop(function(frame) {
             var data = p.getPositionAndRadius(finger);
             p.show(finger.touchZone, data);
             if (finger.touchZone != 'none') hasPointer = true;
-            if (finger.touchZone == 'touching') markIntersections(data);
+            if (finger.touchZone == 'touching') {
+                selecting = true;
+                markIntersections(data);
+            }
+            if (finger.touchZone == 'hovering') {
+                var pos = p.getPercentPosition(data);
+                positions.push(pos);
+            }
         }
     }
     // If no fingers at all, deselect room
     if (!hasPointer) deselectRoom();
+
+    // If not selecting anything, average positions TODO: and set the slider value 
+    if (!selecting && positions.length > 0) {
+        var x = 0;
+        var y = 0;
+        for (i = positions.length - 1; i >= 0; i--) {
+            x += positions[i].x;
+            y += positions[i].y;
+        }
+        x /= positions.length;
+        y /= positions.length;
+        console.log(x, y);
+    }
 
     // If any room intersected, mark it as such
     var hasSelection = false;
@@ -300,7 +324,7 @@ floor.addEventListener("change", function() {
         canvas.remove(currLights[l]);
     }
     currLights = [];
-    for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
+    for (room = 0; room < floors[floor.selectedIndex].length; room++) {
         floors[floor.selectedIndex][room].setControlsVisibility({
             mtr: false
         });
@@ -429,7 +453,7 @@ function moveSlider() {
             if (mode != 1) {
                 canvas.remove(object);
             }
-            if (mode == 0) {
+            if (mode === 0) {
                 object.set({ temp: slider.value });
             } else if (mode == 2) {
                 object.set({ vol: slider.value });
@@ -444,9 +468,9 @@ function moveSlider() {
                 var room = floors[floor.selectedIndex][object.indices.roomIndex];
                 var l = room.lights[object.indices.lightIndex];
                 l.brightness = slider.value;
-                l.color = rgbToHex(parseInt(document.getElementById("r").value),
-                                     parseInt(document.getElementById("g").value),
-                                     parseInt(document.getElementById("b").value));
+                l.color = rgbToHex(parseInt(document.getElementById("r").value, 10),
+                                     parseInt(document.getElementById("g").value, 10),
+                                     parseInt(document.getElementById("b").value, 10));
                 canvas.remove(currLights[object.indices.currLightIndex]);
                 currLights[object.indices.currLightIndex].set({
                     strokeWidth: l.brightness/100*l.radius,
