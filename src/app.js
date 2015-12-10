@@ -654,11 +654,7 @@ document.getElementById("playPause").addEventListener("click", function() {
 
 document.getElementById("next").addEventListener("click", nextSong);
 audio.addEventListener("ended", nextSong);
-
-document.getElementById("prev").addEventListener("click", function() {
-    playListIndex = Math.max(playListIndex - 1, 0);
-    playSong(true);
-});
+document.getElementById("prev").addEventListener("click", prevSong);
 
 function playSong(reload) {
     if (mode == 2) {
@@ -672,6 +668,13 @@ function playSong(reload) {
             audio.play();
             playing = true;
         }
+    }
+}
+
+function prevSong() {
+    if (mode == 2) {
+        playListIndex = Math.max(playListIndex - 1, 0);
+        playSong(true);
     }
 }
 
