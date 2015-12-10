@@ -34,6 +34,18 @@ spotifyApi.searchTracks('You and I')
     console.error(err);
   });
 
+var playPauseShape = new fabric.Triangle({
+                          width: 50,
+                          height: 50,
+                          fill: '#C31F30',
+                          strokeWidth: 1,
+                          stroke: rgbToHex(0, 0, 0),
+                          left: canvas.width - 10, 
+                          top: canvas.height - 60,
+                          selectable: false
+                        });
+playPauseShape.set('angle', 90);
+
 var Pointer = function() {
     var circle = new fabric.Circle();
 
@@ -701,9 +713,15 @@ function playSong(reload) {
         }
         if (!reload || playing) {
             audio.play();
+            canvas.add(playPauseShape);
+            setTimeout(removePlayPauseShape, 1000);
             playing = true;
         }
     }
+}
+
+function removePlayPauseShape() {
+    canvas.remove(playPauseShape);
 }
 
 function prevSong() {
@@ -756,6 +774,8 @@ function addLights(r) {
             left: r.left + r.width*l.fracX - l.radius,
             top: r.top + r.height*l.fracY - l.radius,
             fill: l.color,
+            strokeWidth: 1,
+            stroke: '#C31F30',
             indices: l.indices,
             originX: 'left',
             originY: 'top',
