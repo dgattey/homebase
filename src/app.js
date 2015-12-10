@@ -658,7 +658,10 @@ function deselectRoom() {
 }
 
 var playing = false;
-document.getElementById("playPause").addEventListener("click", function() {
+
+document.getElementById("playPause").addEventListener("click", playPause);
+
+function playPause() {
     if (mode == 2) {
         if (!playing) {
             playSong(false);
@@ -669,7 +672,7 @@ document.getElementById("playPause").addEventListener("click", function() {
             document.getElementById("playPause").innerHTML = "Play";
         }
     }
-});
+}
 
 document.getElementById("next").addEventListener("click", nextSong);
 audio.addEventListener("ended", nextSong);
