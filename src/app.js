@@ -674,7 +674,9 @@ function addLights(r, roomIndex) {
             stroke: l.color,
             indices: l.indices,
             originX: 'left',
-            originY: 'top'
+            originY: 'top',
+            lockMovementX: true,
+            lockMovementY: true
         });
         cir.setControlsVisibility({
             mtr: false,
