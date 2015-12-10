@@ -642,8 +642,8 @@ function deselectRoom() {
       }
     }
 
-    for (var i = 0; i < activeTexts.length; i++) {
-      canvas.remove(activeTexts[i]); //clear all room titles on deselect
+    for (var i2 = 0; i2 < activeTexts.length; i2++) {
+      canvas.remove(activeTexts[i2]); //clear all room titles on deselect
     }
     activeTexts = [];
     // canvas.remove(activeTexts[activeTexts.length - 1]);
