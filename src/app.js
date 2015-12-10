@@ -1,4 +1,7 @@
 var mode = 0;
+var floorMenuOpen = false;
+var appMenuOpen = false;
+var currentFloor = 0;
 var currLights = [];
 var currPointers = [];
 var floors = [];
@@ -120,11 +123,41 @@ Leap.loop(function(frame) {
 
         // Get data
         var hand = frame.hands[f];
-        if (hand.grabStrength <= 0.9) closedFist = false;
+        var overAppMenu = hand.palmPosition[0] < -260 && hand.palmPosition[1] > 370;
+        var overFloorMenu = hand.palmPosition[0] > 260 && hand.palmPosition[1] > 370;
+        var fist = hand.grabStrength > 0.8;
+        if (!fist) closedFist = false;
         var finger = hand.indexFinger;
+        var dir = hand.palmNormal;
+
+        // If over menus with fist, open them if closed
+        if (!appMenuOpen && overAppMenu && fist) {
+            toggleAppMenu(true);
+        } else if (!floorMenuOpen && overFloorMenu && fist) {
+            toggleFloorMenu(true);
+        }
+
+        // If app menu open & moving fast enough, check palm normal
+        if (appMenuOpen && overAppMenu && !fist) {
+            var min = 0.4;
+            var max = 0.6;
+            if (dir[0] > max && dir[1] > -min) {
+                document.changeMode(2); // Music
+                console.log("music");
+            }
+            else if (dir[0] < min && dir[1] < -max) {
+                document.changeMode(0); // Temp
+                console.log("temp");
+            }
+            else {
+                document.changeMode(1); // Lights
+                console.log("light");
+            }
+        }
         
         // If there's a finger and no closed fist, show it!
-        if (finger && !closedFist) {
+        if (!finger) continue;
+        if (!closedFist) {
             if (!p) p = currPointers[f] = new Pointer();
             p.getPositionAndRadius(finger);
             p.setState(finger.touchZone, isSelecting);
@@ -134,8 +167,8 @@ Leap.loop(function(frame) {
             if (!p.notTouching) notTouching = false;
             if (p.isTouching) isSelecting = true;
 
-            // TODO: If we're hovering with one hand, move sliders based on hand position
-            if (p.isHovering) {
+            // If we're hovering with one hand, move sliders based on hand position
+            if (p.isHovering && !isSelecting) {
                 var slider = document.getElementById("slider");
                 slider.value = scalePercent(p.percentY, slider.min*1.0, slider.max*1.0);
                 moveSlider();
@@ -165,17 +198,35 @@ Leap.loopController.setBackground(true);
 
 // For the top left menu
 var toggleAppMenu = function(isOpening) {
+    appMenuOpen = isOpening;
     var toggleClass = "toggle-app-menu";
-    var optionsClasses = document.getElementById("options").classList;
+    var optionsClasses = document.getElementById("options-app").classList;
     if (isOpening === undefined){
       isOpening = !optionsClasses.contains(toggleClass);
     }
     if (!isOpening) {
         optionsClasses.remove(toggleClass);
     } else {
+        toggleFloorMenu(false);
         deselectRoom();
         optionsClasses.add(toggleClass);
-        canvas.setActiveObject(undefined);
+    }
+};
+
+// For the top right menu
+var toggleFloorMenu = function(isOpening) {
+    floorMenuOpen = isOpening;
+    var toggleClass = "toggle-floor-menu";
+    var optionsClasses = document.getElementById("options-floor").classList;
+    if (isOpening === undefined){
+      isOpening = !optionsClasses.contains(toggleClass);
+    }
+    if (!isOpening) {
+        optionsClasses.remove(toggleClass);
+    } else {
+        toggleAppMenu(false);
+        deselectRoom();
+        optionsClasses.add(toggleClass);
     }
 };
 
@@ -352,6 +403,37 @@ floors = [
   ]
 ];
 
+document.changeFloor = function(index) {
+    currentFloor = index-1;
+    for (var room = 0; room < floors[prevFloor].length; room++) {
+        canvas.remove(floors[prevFloor][room]);
+    }
+    for (var l = 0; l < currLights.length; l++) {
+        canvas.remove(currLights[l]);
+    }
+    currLights = [];
+    for (room = 0; room < floors[currentFloor].length; room++) {
+        floors[currentFloor][room].setControlsVisibility({
+            mtr: false,
+            bl: false,
+            br: false,
+            tl: false,
+            tr: false,
+            mt: false,
+            mb: false,
+            ml: false,
+            mr: false
+        });
+        setColor(floors[currentFloor][room]);
+        canvas.add(floors[currentFloor][room]);
+        addRoomText(floors[currentFloor][room]); //handles drawing title for changing floors
+        if (mode == 1 && floors[currentFloor][room].lights !== undefined) {
+            addLights(floors[currentFloor][room], room);
+        }
+    }
+    prevFloor = currentFloor;
+};
+
 document.changeMode = function(index) {
     mode = index;
     for (var l = 0; l < currLights.length; l++) {
@@ -362,8 +444,8 @@ document.changeMode = function(index) {
     }
     activeTexts = [];
     currLights = [];
-    for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
-        var r =  floors[floor.selectedIndex][room];
+    for (var room = 0; room < floors[currentFloor].length; room++) {
+        var r =  floors[currentFloor][room];
         var activeRoom = r == canvas.getActiveObject();
         canvas.remove(r);
         setColor(r);
@@ -393,15 +475,12 @@ document.changeMode = function(index) {
         slider.max = 100;
         slider.value = 0;
     }
-
-    toggleAppMenu(false);
 };
 
 // Set initial room colors and add current floor
-var floor = document.getElementById("floor");
-var prevFloor = floor.selectedIndex;
-for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
-    floors[floor.selectedIndex][room].setControlsVisibility({
+var prevFloor = currentFloor;
+for (var room = 0; room < floors[currentFloor].length; room++) {
+    floors[currentFloor][room].setControlsVisibility({
         mtr: false,
         bl: false,
         br: false,
@@ -412,42 +491,11 @@ for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
         ml: false,
         mr: false
     });
-    setColor(floors[floor.selectedIndex][room]);
+    setColor(floors[currentFloor][room]);
 
-    canvas.add(floors[floor.selectedIndex][room]);
-    addRoomText(floors[floor.selectedIndex][room]); //draws titles for initial floor plan render
+    canvas.add(floors[currentFloor][room]);
+    addRoomText(floors[currentFloor][room]); //draws titles for initial floor plan render
 }
-
-// Changing floors
-floor.addEventListener("change", function() {
-    for (var room = 0; room < floors[prevFloor].length; room++) {
-        canvas.remove(floors[prevFloor][room]);
-    }
-    for (var l = 0; l < currLights.length; l++) {
-        canvas.remove(currLights[l]);
-    }
-    currLights = [];
-    for (room = 0; room < floors[floor.selectedIndex].length; room++) {
-        floors[floor.selectedIndex][room].setControlsVisibility({
-            mtr: false,
-            bl: false,
-            br: false,
-            tl: false,
-            tr: false,
-            mt: false,
-            mb: false,
-            ml: false,
-            mr: false
-        });
-        setColor(floors[floor.selectedIndex][room]);
-        canvas.add(floors[floor.selectedIndex][room]);
-        addRoomText(floors[floor.selectedIndex][room]); //handles drawing title for changing floors
-        if (mode == 1 && floors[floor.selectedIndex][room].lights !== undefined) {
-            addLights(floors[floor.selectedIndex][room]);
-        }
-    }
-    prevFloor = floor.selectedIndex;
-});
 
 var bigRoom;
 var gray = rgbToHex(190, 190, 190);
@@ -479,7 +527,6 @@ function addRoomText(room) {
 }
 
 function selectRoom(targetedRoom) {
-    addRoomText(targetedRoom);
     var room;
     if (targetedRoom == bigRoom || targetedRoom.isType("circle")) {
         return;
@@ -489,8 +536,8 @@ function selectRoom(targetedRoom) {
     }
 
     // Save prior colors & set all current colors to gray
-    for (r = 0; r < floors[floor.selectedIndex].length; r++) {
-        room = floors[floor.selectedIndex][r];
+    for (r = 0; r < floors[currentFloor].length; r++) {
+        room = floors[currentFloor][r];
         if (!room.priorColor) room.priorColor = room.fill;
         room.set('fill', gray);
     }
@@ -510,6 +557,7 @@ function selectRoom(targetedRoom) {
         height = targetedRoom.height * (canvasWidthFrac / targetedRoom.width);
         scale = canvasWidthFrac/targetedRoom.width;
     }
+    addRoomText(targetedRoom);
 
     bigRoom = new fabric.Rect({
         name: targetedRoom.name,
@@ -599,13 +647,15 @@ function selectRoom(targetedRoom) {
     }
 
     toggleAppMenu(false);
+    toggleFloorMenu(false);
 }
 
 function deselectRoom() {
     if (!bigRoom) return;
 
-    for (var r = 0; r < floors[floor.selectedIndex].length; r++) {
-        var room = floors[floor.selectedIndex][r];
+    var r, i;
+    for (r = 0; r < floors[currentFloor].length; r++) {
+        var room = floors[currentFloor][r];
         room.set('fill', room.priorColor);
         room.priorColor = undefined;
     }
@@ -617,7 +667,7 @@ function deselectRoom() {
       }
     }
 
-    for (var i = 0; i < tempTexts.length; i++) {
+    for (i = 0; i < tempTexts.length; i++) {
       canvas.remove(tempTexts[i]);
     }
 
@@ -628,14 +678,12 @@ function deselectRoom() {
     // canvas.remove(activeTexts[activeTexts.length - 1]);
     canvas.remove(bigRoom);
 
-    for (var r2 = 0; r2 < floors[floor.selectedIndex].length; r2++) {
-      // if (floors[floor.selectedIndex][r].name == bigRoom.name) {
-        addRoomText(floors[floor.selectedIndex][r2]); //redraw all room titles on deselect
+    for (var r2 = 0; r2 < floors[currentFloor].length; r2++) {
+      // if (floors[currentFloor][r].name == bigRoom.name) {
+        addRoomText(floors[currentFloor][r2]); //redraw all room titles on deselect
       // }
     }
     bigRoom = undefined;
-
-
 }
 
 var playing = false;
@@ -647,7 +695,7 @@ document.getElementById("playPause").addEventListener("click", function() {
         } else {
             audio.pause();
             playing = false;
-            document.getElementById("playPause").innerHTML = "Play";        
+            document.getElementById("playPause").innerHTML = "Play";
         }
     }
 });
@@ -660,7 +708,7 @@ function playSong(reload) {
     if (mode == 2) {
         audio.volume = slider.value/100;
         if (reload || audio.src === "") {
-            console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " + 
+            console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " +
                         playlist.tracks.items[playListIndex].name);
             audio.src = playlist.tracks.items[playListIndex].preview_url;
         }
@@ -763,7 +811,7 @@ function moveSlider() {
                 setColor(object);
                 canvas.add(object);
             }
-                canvas.setActiveObject(object);
+            canvas.setActiveObject(object);
         }
     }
 }

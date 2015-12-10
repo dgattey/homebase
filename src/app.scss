@@ -17,7 +17,11 @@ canvas#c {
     margin: 0 auto;
 }
 
-svg.app-menu {
+svg.floor-menu {
+    left: 380px;
+}
+
+svg.app-menu, svg.floor-menu {
     display: block;
     pointer-events: none;
     max-width: 120px;
@@ -46,15 +50,21 @@ svg.app-menu {
         fill: white;
         pointer-events: none;
     }
+    & #options-floor g#floor1 {
+        transform-origin: 200% 0%;
+    }
+    & #options-floor g#floor3 {
+        transform-origin: 100% -100%;
+    }
 
-    & #options g {
+    & #options-app g, & #options-floor g {
         transition: 0.3s transform;
-        &#music {
+        &#music, &#floor3 {
             transform: rotate(-180deg);
             -ms-transform: rotate(-180deg);
             -webkit-transform: rotate(-180deg);
         }
-        &#temp {
+        &#temp, &#floor1 {
             transform: rotate(180deg);
             -ms-transform: rotate(180deg);
             -webkit-transform: rotate(180deg);
@@ -65,10 +75,23 @@ svg.app-menu {
             -ms-transform: translate(-150px, -150px);
             -webkit-transform: translate(-150px, -150px);
         }
+        &#floor2 {
+            transition: 0.32s transform;
+            transform: translate(150px, -150px);
+            -ms-transform: translate(150px, -150px);
+            -webkit-transform: translate(150px, -150px);            
+        }
     }
 
-    & #options.toggle-app-menu {
+    & #options-app.toggle-app-menu {
         & g#music, & g#temp, & g#lighting {
+            transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+            -webkit-transform: rotate(0deg);
+        }
+    }
+    & #options-floor.toggle-floor-menu {
+        & g#floor1, & g#floor2, & g#floor3 {
             transform: rotate(0deg);
             -ms-transform: rotate(0deg);
             -webkit-transform: rotate(0deg);
