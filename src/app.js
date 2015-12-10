@@ -370,7 +370,7 @@ document.changeMode = function(index) {
         canvas.add(r);
         addRoomText(r);
         if (mode == 1 && r.lights !== undefined) {
-            addLights(r, room);
+            addLights(r);
         }
     }
 
@@ -443,7 +443,7 @@ floor.addEventListener("change", function() {
         canvas.add(floors[floor.selectedIndex][room]);
         addRoomText(floors[floor.selectedIndex][room]); //handles drawing title for changing floors
         if (mode == 1 && floors[floor.selectedIndex][room].lights !== undefined) {
-            addLights(floors[floor.selectedIndex][room], room);
+            addLights(floors[floor.selectedIndex][room]);
         }
     }
     prevFloor = floor.selectedIndex;
@@ -692,19 +692,17 @@ document.getElementById("g").addEventListener("change", moveSlider);
 document.getElementById("b").addEventListener("input", moveSlider);
 document.getElementById("b").addEventListener("change", moveSlider);
 
-function addLights(r, roomIndex) {
+function addLights(r) {
     for (var light = 0; light < r.lights.length; light++) {
         var l = r.lights[light];
         if (!l.brightness) l.brightness = 0;
-        if (!l.color) l.color = rgbToHex(255, 255, 255);
-        if (!l.indices) l.indices = { roomIndex: roomIndex, lightIndex: light, currLightIndex: currLights.length };
+        if (!l.color) l.color = rgbToHex(0, 0, 0);
+        if (!l.indices) l.indices = { currLightIndex: currLights.length };
         var cir = new fabric.Circle({
             radius: l.radius,
             left: r.left + r.width*l.fracX - l.radius,
             top: r.top + r.height*l.fracY - l.radius,
-            fill: rgbToHex(100, 100, 100),
-            strokeWidth: l.brightness/100*l.radius,
-            stroke: l.color,
+            fill: l.color,
             indices: l.indices,
             originX: 'left',
             originY: 'top',
@@ -741,30 +739,27 @@ function moveSlider() {
             }
             if (mode === 0) {
                 object.set({ temp: slider.value });
+            } else if (mode == 1 && object.lights !== undefined) {
+                for (var l = 0; l < object.lights.length; l++) {
+                    object.lights[l].brightness = slider.value;
+                    var frac = slider.value/100;
+                    object.lights[l].color = rgbToHex(parseInt(Math.floor(document.getElementById("r").value*frac), 10),
+                                                      parseInt(Math.floor(document.getElementById("g").value*frac), 10),
+                                                      parseInt(Math.floor(document.getElementById("b").value*frac), 10));
+                    canvas.remove(currLights[object.lights[l].indices.currLightIndex]);
+                    currLights[object.lights[l].indices.currLightIndex].set({
+                        fill: object.lights[l].color
+                    });
+                    canvas.add(currLights[object.lights[l].indices.currLightIndex]);
+                }
             } else if (mode == 2) {
                 object.set({ vol: slider.value });
             }
             if (mode != 1) {
                 setColor(object);
                 canvas.add(object);
-                canvas.setActiveObject(object);
             }
-        } else {
-            if (mode == 1) {
-                var room = floors[floor.selectedIndex][object.indices.roomIndex];
-                var l = room.lights[object.indices.lightIndex];
-                l.brightness = slider.value;
-                l.color = rgbToHex(parseInt(document.getElementById("r").value, 10),
-                                     parseInt(document.getElementById("g").value, 10),
-                                     parseInt(document.getElementById("b").value, 10));
-                canvas.remove(currLights[object.indices.currLightIndex]);
-                currLights[object.indices.currLightIndex].set({
-                    strokeWidth: l.brightness/100*l.radius,
-                    stroke: l.color
-                });
-                canvas.add(currLights[object.indices.currLightIndex]);
                 canvas.setActiveObject(object);
-            }
         }
     }
 }
