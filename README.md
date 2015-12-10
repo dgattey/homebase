@@ -1,6 +1,15 @@
 # Homebase
 A smart home utility powered by LEAP
 
+Homebase is a unification of smart home appliances.
+Languages:
+JS, CSS
+
+Libraries:
+fabricJS
+Bower package for Spotify Web API
+
+
 ### Architecture of App
 We're using a Node.js environment, with Google's Polymer as a frontend library and Gulp for continuous development. Bower is used for package management, and Gulp automatically compiles all our code into the build folder when run.
 
