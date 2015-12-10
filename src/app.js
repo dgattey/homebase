@@ -452,6 +452,10 @@ floors = [
 
 document.changeFloor = function(index) {
     if (currentFloor == index-1) return;
+
+    audio.pause();
+    playing = false;
+    document.getElementById("playPause").innerHTML = "Play";
     
     currentFloor = index-1;
     for (var room = 0; room < floors[prevFloor].length; room++) {
@@ -474,6 +478,12 @@ document.changeFloor = function(index) {
 };
 
 document.changeMode = function(index) {
+    if (mode == index) return;
+
+    audio.pause();
+    playing = false;
+    document.getElementById("playPause").innerHTML = "Play";
+    
     mode = index;
     for (var l = 0; l < currLights.length; l++) {
         canvas.remove(currLights[l]);
