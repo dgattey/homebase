@@ -479,6 +479,7 @@ function addRoomText(room) {
 }
 
 function selectRoom(targetedRoom) {
+    addRoomText(targetedRoom);
     var room;
     if (targetedRoom == bigRoom || targetedRoom.isType("circle")) {
         return;
@@ -620,16 +621,16 @@ function deselectRoom() {
       canvas.remove(tempTexts[i]);
     }
 
-    for (var i = 0; i < activeTexts.length; i++) {
-      canvas.remove(activeTexts[i]); //clear all room titles on deselect
+    for (var i2 = 0; i2 < activeTexts.length; i2++) {
+      canvas.remove(activeTexts[i2]); //clear all room titles on deselect
     }
     activeTexts = [];
     // canvas.remove(activeTexts[activeTexts.length - 1]);
     canvas.remove(bigRoom);
 
-    for (var r = 0; r < floors[floor.selectedIndex].length; r++) {
+    for (var r2 = 0; r2 < floors[floor.selectedIndex].length; r2++) {
       // if (floors[floor.selectedIndex][r].name == bigRoom.name) {
-        addRoomText(floors[floor.selectedIndex][r]); //redraw all room titles on deselect
+        addRoomText(floors[floor.selectedIndex][r2]); //redraw all room titles on deselect
       // }
     }
     bigRoom = undefined;
