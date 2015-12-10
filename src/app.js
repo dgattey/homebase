@@ -174,6 +174,7 @@ var toggleAppMenu = function(isOpening) {
     } else {
         deselectRoom();
         optionsClasses.add(toggleClass);
+        canvas.setActiveObject(undefined);
     }
 };
 
@@ -586,10 +587,11 @@ function deselectRoom() {
         room.set('fill', room.priorColor);
         room.priorColor = undefined;
     }
+    var numLights = currLights.length - 1 - bigRoom.lights.length;
     if (mode == 1) {
-      for (var light = currLights.length - 1; light > currLights.length - 1 - bigRoom.lights.length; light--) {
+      for (var light = currLights.length - 1; light > numLights; light--) {
         canvas.remove(currLights[light]);
-        currLights.splice(currLights[light], 1);
+        currLights.splice(currLights[light], -1);
       }
     }
 
