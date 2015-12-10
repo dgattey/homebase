@@ -462,18 +462,6 @@ function addRoomText(room) {
                                               fill: '#FFFFFF',
                                               fontFamily: 'Helvetica',
                                               selectable: false});
-
-  roomTitle.setControlsVisibility({
-            mtr: false,
-            bl: false,
-            br: false,
-            tl: false,
-            tr: false,
-            mt: false,
-            mb: false,
-            ml: false,
-            mr: false
-        });
   roomTitle.set({
     left: room.left + (room.width / 2),
     top: room.top + (room.height / 2),
