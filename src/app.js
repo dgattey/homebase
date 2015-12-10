@@ -4,6 +4,7 @@ var currPointers = [];
 var floors = [];
 var roomGroups = [];
 var activeTexts = [];
+var tempTexts = [];
 var canvas = new fabric.Canvas('c', {
     selection: false
 });
@@ -510,6 +511,7 @@ function selectRoom(targetedRoom) {
       roomTitle.set({
         left: canvas.width / 2,
         top: 175-height/2 + roomTitle.height / 2,
+        // top: canvas.height / 2,
         originX: 'center',
         originY: 'center'});
     } else {
@@ -519,19 +521,32 @@ function selectRoom(targetedRoom) {
       roomTitle.set({
         left: canvas.width / 2,
         top: 175-height/2 + roomTitle.height / 2,
+        // top: canvas.height / 2,
         originX: 'center',
         originY: 'center'});
     }
-    
 
     
 
-    activeTexts.push(roomTitle);
+    // var roomTemp = new fabric.Text(room.temp + "F", {fontSize: 20,
+    //                                            fill: '#FFFFFF',
+    //                                            fontFamily: 'Helvetica',
+    //                                            left: canvas.width / 2,
+    //                                            top: canvas.height / 2,
+    //                                            originX: 'center', 
+    //                                            originY: 'center'});
+
+    // if (targetedRoom.name == "Hallway") {
+    //   roomTemp.set({top: roomTitle.top + 25});
+    // }
+    // canvas.add(roomTemp);
     canvas.add(roomTitle);
 
-
+    activeTexts.push(roomTitle);
+    // tempTexts.push(roomTemp);
     bigRoom.bringToFront();
     roomTitle.bringToFront();
+    // roomTemp.bringToFront();
     if (mode == 1) {
         addLights(bigRoom);
     }
@@ -552,9 +567,20 @@ function deselectRoom() {
       }
     }
 
-    canvas.remove(activeTexts[activeTexts.length - 1]); //remove last text
+    for (var i = 0; i < tempTexts.length; i++) {
+      canvas.remove(tempTexts[i]);
+    }
+    canvas.remove(activeTexts[activeTexts.length - 1]);
     canvas.remove(bigRoom);
+
+    for (var r = 0; r < floors[floor.selectedIndex].length; r++) {
+      if (floors[floor.selectedIndex][r].name == bigRoom.name) {
+        addRoomText(floors[floor.selectedIndex][r]);
+      }
+    }
     bigRoom = undefined;
+
+
 }
 
 var playing = false;
