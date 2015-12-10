@@ -620,16 +620,16 @@ function deselectRoom() {
       canvas.remove(tempTexts[i]);
     }
 
-    // for (var i = 0; i < activeTexts.length; i++) {
-      // canvas.remove(activeTexts[i]);
-    // }
-    canvas.remove(activeTexts[activeTexts.length - 1]);
+    for (var i = 0; i < activeTexts.length; i++) {
+      canvas.remove(activeTexts[i]);
+    }
+    // canvas.remove(activeTexts[activeTexts.length - 1]);
     canvas.remove(bigRoom);
 
     for (var r = 0; r < floors[floor.selectedIndex].length; r++) {
-      if (floors[floor.selectedIndex][r].name == bigRoom.name) {
+      // if (floors[floor.selectedIndex][r].name == bigRoom.name) {
         addRoomText(floors[floor.selectedIndex][r]);
-      }
+      // }
     }
     bigRoom = undefined;
 
