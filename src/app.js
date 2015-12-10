@@ -498,26 +498,28 @@ function selectRoom(targetedRoom) {
         room.set('fill', gray);
     }
 
+    var canvasWidthFrac = canvas.width*0.65;
+    var canvasHeightFrac = canvas.height*0.65;
     var width;
     var height;
-    var widthIfHeightLarger = targetedRoom.getWidth() * (175 / targetedRoom.getHeight());
+    var widthIfHeightLarger = targetedRoom.width * (canvasHeightFrac / targetedRoom.height);
     var scale;
-    if (widthIfHeightLarger < 250){
+    if (widthIfHeightLarger < canvasWidthFrac){
         width = widthIfHeightLarger;
-        height = 175;
-        scale = 175/targetedRoom.getHeight();
+        height = canvasHeightFrac;
+        scale = canvasHeightFrac/targetedRoom.height;
     } else{
-        width = 250;
-        height = targetedRoom.height * (250 / targetedRoom.getWidth());
-        scale = 250/targetedRoom.getWidth();
+        width = canvasWidthFrac;
+        height = targetedRoom.height * (canvasWidthFrac / targetedRoom.width);
+        scale = canvasWidthFrac/targetedRoom.width;
     }
 
     bigRoom = new fabric.Rect({
         name: targetedRoom.name,
         width: width,
         height: height,
-        left: 250-width/2,
-        top: 175-height/2,
+        left: canvas.width*0.5-width/2,
+        top: canvas.height*0.5-height/2,
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
@@ -551,24 +553,17 @@ function selectRoom(targetedRoom) {
       roomTitle = new fabric.Text("Bath-\nroom", {fontSize: 18,
                                                   fill: '#FFFFFF',
                                                   fontFamily: 'Helvetica'});
-      roomTitle.set({
-        left: canvas.width / 2,
-        top: 175-height/2 + roomTitle.height / 2,
-        originX: 'center',
-        originY: 'center'});
     } else {
       roomTitle = new fabric.Text(targetedRoom.name, {fontSize: 18,
                                                       fill: '#FFFFFF',
                                                       fontFamily: 'Helvetica'});
-      roomTitle.set({
-        left: canvas.width / 2,
-        top: 175-height/2 + roomTitle.height / 2,
-        originX: 'center',
-        originY: 'center'});
     }
-    
-
-    
+    roomTitle.set({
+        left: canvas.width / 2,
+        top: canvas.height*0.5-height/2 + roomTitle.height / 2,
+        originX: 'center',
+        originY: 'center'
+    });
 
     activeTexts.push(roomTitle);
     canvas.add(roomTitle);
