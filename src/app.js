@@ -141,9 +141,9 @@ Leap.loop(function(frame) {
         }
 
         // Not over menu but have fist and is open, close it
-        else if (appMenuOpen && hasChangedMenuOption && !overAppMenu) {
+        else if (appMenuOpen && hasChangedMenuOption && !overAppMenu && fist) {
             toggleAppMenu(false);
-        } else if (floorMenuOpen && hasChangedFloorOption && !overFloorMenu) {
+        } else if (floorMenuOpen && hasChangedFloorOption && !overFloorMenu && fist) {
             toggleFloorMenu(false);
         }
 
@@ -164,10 +164,10 @@ Leap.loop(function(frame) {
         // If floor menu open and hovering over it, use normal to change floor
         else if (floorMenuOpen && overFloorMenu && !fist) {
             hasChangedFloorOption = true;
-            if (dir[0] > -max && dir[1] < -min) {
+            if (dir[0] < -max && dir[1] > -min) {
                 document.changeFloor(1);
             }
-            else if (dir[0] > min && dir[1] > -max) {
+            else if (dir[0] > -min && dir[1] < -max) {
                 document.changeFloor(3);
             }
             else {
