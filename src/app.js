@@ -534,7 +534,7 @@ document.getElementById("prev").addEventListener("click", function() {
 });
 
 function playSong(reload) {
-    if (reload || audio.src == "") {
+    if (reload || audio.src === "") {
         console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " + 
                     playlist.tracks.items[playListIndex].name);
         audio.src = playlist.tracks.items[playListIndex].preview_url;
