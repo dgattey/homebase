@@ -363,9 +363,6 @@ document.changeMode = function(index) {
         setColor(r);
         canvas.add(r);
         addRoomText(r);
-        if (activeRoom) {
-            canvas.setActiveObject(r);
-        }
         if (mode == 1 && r.lights !== undefined) {
             addLights(r, room);
         }
