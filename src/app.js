@@ -3,6 +3,7 @@ var currLights = [];
 var currPointers = [];
 var floors = [];
 var roomGroups = [];
+var activeTexts = [];
 var canvas = new fabric.Canvas('c', {
     selection: false
 });
@@ -260,6 +261,7 @@ floors = [
   ],
 
   [new fabric.Rect({
+      name: "Bedroom",
       width: 150,
       height: 100,
       left: 115,
@@ -271,6 +273,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
+      name: "Bedroom",
       width: 125,
       height: 100,
       left: 275,
@@ -283,6 +286,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
+      name: "Hallway",
       width: 250,
       height: 50,
       left: 150,
@@ -294,6 +298,7 @@ floors = [
       lockMovementY: true
     }),
     new fabric.Rect({
+      name: "Master Bedroom",
       width: 250,
       height: 100,
       left: 175,
@@ -312,6 +317,10 @@ document.changeMode = function(index) {
     for (var l = 0; l < currLights.length; l++) {
         canvas.remove(currLights[l]);
     }
+    for (var i = 0; i < activeTexts.length; i++) { //clear old room labels
+      canvas.remove(activeTexts[i]);
+    }
+
     currLights = [];
     for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
         var r =  floors[floor.selectedIndex][room];
@@ -319,6 +328,7 @@ document.changeMode = function(index) {
         canvas.remove(r);
         setColor(r);
         canvas.add(r);
+        addRoomText(r);
         if (activeRoom) {
             canvas.setActiveObject(r);
         }
@@ -326,6 +336,7 @@ document.changeMode = function(index) {
             addLights(r, room);
         }
     }
+
     deselectRoom();
 
     var slider = document.getElementById("slider");
@@ -363,26 +374,9 @@ for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
         mr: false
     });
     setColor(floors[floor.selectedIndex][room]);
-    //create room name and group with room
-    var roomTitle = new fabric.Text(floors[floor.selectedIndex][room].name, {fontSize: 18,
-                                                                             fill: '#FFFFFF',
-                                                                             fontFamily: 'Helvetica'});
-    if (floors[floor.selectedIndex][room].name == "Bathroom") { //weird special case for orienting text
-      roomTitle.set({angle: 90});
-    }
-    roomTitle.set({
-      left: floors[floor.selectedIndex][room].left + (floors[floor.selectedIndex][room].width / 2),
-      top: floors[floor.selectedIndex][room].top + (floors[floor.selectedIndex][room].height / 2),
-      originX: 'center',
-      originY: 'center'
-    });
-
-    // var group = new fabric.Group([floors[floor.selectedIndex][room], roomTitle]);
-    // canvas.add(group);
-    // roomGroups.push(group); //global tracking of groups
 
     canvas.add(floors[floor.selectedIndex][room]);
-    canvas.add(roomTitle);
+    addRoomText(floors[floor.selectedIndex][room]);
 }
 
 // Changing floors
@@ -408,6 +402,7 @@ floor.addEventListener("change", function() {
         });
         setColor(floors[floor.selectedIndex][room]);
         canvas.add(floors[floor.selectedIndex][room]);
+        addRoomText(floors[floor.selectedIndex][room]);
         if (mode == 1 && floors[floor.selectedIndex][room].lights !== undefined) {
             addLights(floors[floor.selectedIndex][room], room);
         }
@@ -424,6 +419,24 @@ canvas.on('object:selected', function(options){
 canvas.on('selection:cleared', function(options) {
     deselectRoom();
 });
+
+function addRoomText(room) {
+  var roomTitle = new fabric.Text(room.name, {fontSize: 18,
+                                              fill: '#FFFFFF',
+                                              fontFamily: 'Helvetica'});
+  roomTitle.set({
+    left: room.left + (room.width / 2),
+    top: room.top + (room.height / 2),
+    originX: 'center',
+    originY: 'center'});
+
+  if (room.name == "Bathroom") { //weird special case for orienting text
+    roomTitle.set({angle: 90});
+  }
+
+  activeTexts.push(roomTitle);
+  canvas.add(roomTitle);
+}
 
 function selectRoom(targetedRoom) {
     var room;
