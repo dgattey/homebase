@@ -164,13 +164,18 @@ Leap.loop(function(frame) {
 Leap.loopController.setBackground(true);
 
 // For the top left menu
-var toggleAppMenu = function() {
+var toggleAppMenu = function(isOpening) {
     var toggleClass = "toggle-app-menu";
     var optionsClasses = document.getElementById("options").classList;
-    if (optionsClasses.contains(toggleClass)) {
+    if (isOpening === undefined){
+      isOpening = !optionsClasses.contains(toggleClass);
+    }
+    if (!isOpening) {
         optionsClasses.remove(toggleClass);
     } else {
+        deselectRoom();
         optionsClasses.add(toggleClass);
+        canvas.setActiveObject(undefined);
     }
 };
 
@@ -203,7 +208,7 @@ floors = [
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
-      lights: [{ radius: 10, fracX: 0.75, fracY: 0.5 }],
+      lights: [{ radius: 20, fracX: 0.80, fracY: 0.5 }],
       lockMovementX: true,
       lockMovementY: true
     }),
@@ -216,7 +221,7 @@ floors = [
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.75 }],
+      lights: [{ radius: 15, fracX: 0.5, fracY: 0.75 }],
       lockMovementX: true,
       lockMovementY: true
     }),
@@ -229,7 +234,7 @@ floors = [
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+      lights: [{ radius: 10, fracX: 0.75, fracY: 0.5 }],
       lockMovementX: true,
       lockMovementY: true
     }),
@@ -242,7 +247,7 @@ floors = [
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
-      lights: [{ radius: 10, fracX: 0.25, fracY: 0.25 }],
+      lights: [{ radius: 15, fracX: 0.15, fracY: 0.25 }, { radius: 20, fracX: 0.85, fracY: 0.65 }],
       lockMovementX: true,
       lockMovementY: true
     }),
@@ -255,7 +260,7 @@ floors = [
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.15 }],
       lockMovementX: true,
       lockMovementY: true
     })
@@ -265,36 +270,38 @@ floors = [
       name: "Bedroom",
       width: 150,
       height: 100,
-      left: 115,
-      top: 75,
+      left: 70,
+      top: 25,
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.25 }],
       lockMovementX: true,
       lockMovementY: true
     }),
     new fabric.Rect({
       name: "Bedroom",
-      width: 125,
+      width: 155,
       height: 100,
-      left: 275,
-      top: 75,
+      left: 225,
+      top: 25,
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.75 }],
       lockMovementX: true,
       lockMovementY: true
     }),
     new fabric.Rect({
       name: "Hallway",
-      width: 250,
+      width: 310,
       height: 50,
-      left: 150,
-      top: 180,
+      left: 70,
+      top: 130,
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
+      lights: [{ radius: 10, fracX: 0.35, fracY: 0.5 }],
       lockMovementX: true,
       lockMovementY: true
     }),
@@ -302,11 +309,43 @@ floors = [
       name: "Master Bedroom",
       width: 250,
       height: 100,
-      left: 175,
-      top: 235,
+      left: 130,
+      top: 185,
       fill: rgbToHex(100, 100, 100),
       originX: 'left',
       originY: 'top',
+      lights: [{ radius: 15, fracX: 0.15, fracY: 0.25 }, { radius: 7, fracX: 0.85, fracY: 0.65 }],
+      lockMovementX: true,
+      lockMovementY: true
+    }),
+    new fabric.Rect({
+      name: "Bathroom",
+      width: 55,
+      height: 100,
+      left: 70,
+      top: 185,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+      lockMovementX: true,
+      lockMovementY: true
+    })
+  ],
+
+  [new fabric.Rect({
+      name: "Attic",
+      width: 310,
+      height: 260,
+      left: 70,
+      top: 25,
+      fill: rgbToHex(100, 100, 100),
+      originX: 'left',
+      originY: 'top',
+      lights: [{ radius: 15, fracX: 0.25, fracY: 0.25 },
+               { radius: 15, fracX: 0.75, fracY: 0.25 },
+               { radius: 15, fracX: 0.25, fracY: 0.75 },
+               { radius: 15, fracX: 0.75, fracY: 0.75 }],
       lockMovementX: true,
       lockMovementY: true
     })
@@ -330,9 +369,6 @@ document.changeMode = function(index) {
         setColor(r);
         canvas.add(r);
         addRoomText(r);
-        if (activeRoom) {
-            canvas.setActiveObject(r);
-        }
         if (mode == 1 && r.lights !== undefined) {
             addLights(r, room);
         }
@@ -357,6 +393,8 @@ document.changeMode = function(index) {
         slider.max = 100;
         slider.value = 0;
     }
+
+    toggleAppMenu(false);
 };
 
 // Set initial room colors and add current floor
@@ -424,7 +462,8 @@ canvas.on('selection:cleared', function(options) {
 function addRoomText(room) {
   var roomTitle = new fabric.Text(room.name, {fontSize: 18,
                                               fill: '#FFFFFF',
-                                              fontFamily: 'Helvetica'});
+                                              fontFamily: 'Helvetica',
+                                              selectable: false});
   roomTitle.set({
     left: room.left + (room.width / 2),
     top: room.top + (room.height / 2),
@@ -455,26 +494,28 @@ function selectRoom(targetedRoom) {
         room.set('fill', gray);
     }
 
+    var canvasWidthFrac = canvas.width*0.65;
+    var canvasHeightFrac = canvas.height*0.65;
     var width;
     var height;
-    var widthIfHeightLarger = targetedRoom.getWidth() * (175 / targetedRoom.getHeight());
+    var widthIfHeightLarger = targetedRoom.width * (canvasHeightFrac / targetedRoom.height);
     var scale;
-    if (widthIfHeightLarger < 250){
+    if (widthIfHeightLarger < canvasWidthFrac){
         width = widthIfHeightLarger;
-        height = 175;
-        scale = 175/targetedRoom.getHeight();
+        height = canvasHeightFrac;
+        scale = canvasHeightFrac/targetedRoom.height;
     } else{
-        width = 250;
-        height = targetedRoom.height * (250 / targetedRoom.getWidth());
-        scale = 250/targetedRoom.getWidth();
+        width = canvasWidthFrac;
+        height = targetedRoom.height * (canvasWidthFrac / targetedRoom.width);
+        scale = canvasWidthFrac/targetedRoom.width;
     }
 
     bigRoom = new fabric.Rect({
         name: targetedRoom.name,
         width: width,
         height: height,
-        left: 250-width/2,
-        top: 175-height/2,
+        left: canvas.width*0.5-width/2,
+        top: canvas.height*0.5-height/2,
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
@@ -526,8 +567,6 @@ function selectRoom(targetedRoom) {
         originY: 'center'});
     }
 
-    
-
     // var roomTemp = new fabric.Text(room.temp + "F", {fontSize: 20,
     //                                            fill: '#FFFFFF',
     //                                            fontFamily: 'Helvetica',
@@ -550,6 +589,14 @@ function selectRoom(targetedRoom) {
     if (mode == 1) {
         addLights(bigRoom);
     }
+
+    if (mode === 0) {
+        slider.value = targetedRoom.temp;
+    } else if (mode == 2) {
+        slider.value = targetedRoom.vol;
+    }
+
+    toggleAppMenu(false);
 }
 
 function deselectRoom() {
@@ -560,10 +607,11 @@ function deselectRoom() {
         room.set('fill', room.priorColor);
         room.priorColor = undefined;
     }
+    var numLights = currLights.length - 1 - bigRoom.lights.length;
     if (mode == 1) {
-      for (var light = currLights.length - 1; light > currLights.length - 1 - bigRoom.lights.length; light--) {
+      for (var light = currLights.length - 1; light > numLights; light--) {
         canvas.remove(currLights[light]);
-        currLights.splice(currLights[light], 1);
+        currLights.splice(currLights[light], -1);
       }
     }
 
@@ -653,7 +701,9 @@ function addLights(r, roomIndex) {
             stroke: l.color,
             indices: l.indices,
             originX: 'left',
-            originY: 'top'
+            originY: 'top',
+            lockMovementX: true,
+            lockMovementY: true
         });
         cir.setControlsVisibility({
             mtr: false,

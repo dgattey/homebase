@@ -19,6 +19,7 @@
   "dependencies": {
     "leapjs": "~0.6.4",
     "leapjs-plugins": "~0.1.11",
-    "fabric.js": "fabric#~1.5.0"
+    "fabric.js": "fabric#~1.5.0",
+    "spotify-web-api-js": "~0.18.0"
   }
 }
