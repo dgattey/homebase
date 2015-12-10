@@ -9,6 +9,10 @@ var currPointers = [];
 var floors = [];
 var roomGroups = [];
 var activeTexts = [];
+var time = {
+    curr: undefined,
+    lastMusicChange: undefined
+};
 var canvas = new fabric.Canvas('c', {
     selection: false
 });
@@ -113,6 +117,7 @@ function markIntersections(point) {
  * LEAP EVENT LOOP - runs on each frame
  */
 Leap.loop(function(frame) {
+    time.curr = new Date().getTime();
     // Creates a pointer for each finger and positions them
     var isSelecting = false;
     var closedFist = true;
@@ -127,6 +132,7 @@ Leap.loop(function(frame) {
         var overAppMenu = hand.palmPosition[0] < -260 && hand.palmPosition[1] > 370;
         var overFloorMenu = hand.palmPosition[0] > 260 && hand.palmPosition[1] > 370;
         var fist = hand.grabStrength > 0.8;
+        var pinched = hand.pinchStrength > 0.8;
         if (!fist) closedFist = false;
         var finger = hand.indexFinger;
         var dir = hand.palmNormal;
@@ -174,10 +180,17 @@ Leap.loop(function(frame) {
                 document.changeFloor(2);
             }
         }
+
+        // If a fist and in music mode, playPause
+        if (!fist && pinched && mode == 2 && (!time.lastMusicChange || time.curr - time.lastMusicChange > 1000)) {
+            playPause();
+            time.lastMusicChange = time.curr;
+            continue;
+        }
         
         // If there's a finger and no closed fist, show it!
         if (!finger) continue;
-        if (!closedFist) {
+        if (!fist) {
             if (!p) p = currPointers[f] = new Pointer();
             p.getPositionAndRadius(finger);
             p.setState(finger.touchZone, isSelecting);
