@@ -469,6 +469,7 @@ function selectRoom(targetedRoom) {
     }
 
     bigRoom = new fabric.Rect({
+        name: targetedRoom.name,
         width: width,
         height: height,
         left: 250-width/2,
@@ -500,7 +501,37 @@ function selectRoom(targetedRoom) {
     }
 
     canvas.add(bigRoom);
+
+    var roomTitle;
+    if (targetedRoom.name == "Bathroom") { //weird special case for orienting text
+      roomTitle = new fabric.Text("Bath-\nroom", {fontSize: 18,
+                                                  fill: '#FFFFFF',
+                                                  fontFamily: 'Helvetica'});
+      roomTitle.set({
+        left: canvas.width / 2,
+        top: 175-height/2 + roomTitle.height / 2,
+        originX: 'center',
+        originY: 'center'});
+    } else {
+      roomTitle = new fabric.Text(targetedRoom.name, {fontSize: 18,
+                                                      fill: '#FFFFFF',
+                                                      fontFamily: 'Helvetica'});
+      roomTitle.set({
+        left: canvas.width / 2,
+        top: 175-height/2 + roomTitle.height / 2,
+        originX: 'center',
+        originY: 'center'});
+    }
+    
+
+    
+
+    activeTexts.push(roomTitle);
+    canvas.add(roomTitle);
+
+
     bigRoom.bringToFront();
+    roomTitle.bringToFront();
     if (mode == 1) {
         addLights(bigRoom);
     }
@@ -520,6 +551,8 @@ function deselectRoom() {
         currLights.splice(currLights[light], 1);
       }
     }
+
+    canvas.remove(activeTexts[activeTexts.length - 1]); //remove last text
     canvas.remove(bigRoom);
     bigRoom = undefined;
 }
