@@ -423,7 +423,20 @@ canvas.on('selection:cleared', function(options) {
 function addRoomText(room) {
   var roomTitle = new fabric.Text(room.name, {fontSize: 18,
                                               fill: '#FFFFFF',
-                                              fontFamily: 'Helvetica'});
+                                              fontFamily: 'Helvetica',
+                                              selectable: false});
+
+  roomTitle.setControlsVisibility({
+            mtr: false,
+            bl: false,
+            br: false,
+            tl: false,
+            tr: false,
+            mt: false,
+            mb: false,
+            ml: false,
+            mr: false
+        });
   roomTitle.set({
     left: room.left + (room.width / 2),
     top: room.top + (room.height / 2),
