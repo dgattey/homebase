@@ -619,6 +619,10 @@ function deselectRoom() {
     for (var i = 0; i < tempTexts.length; i++) {
       canvas.remove(tempTexts[i]);
     }
+
+    // for (var i = 0; i < activeTexts.length; i++) {
+      // canvas.remove(activeTexts[i]);
+    // }
     canvas.remove(activeTexts[activeTexts.length - 1]);
     canvas.remove(bigRoom);
 
