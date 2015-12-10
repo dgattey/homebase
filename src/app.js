@@ -559,14 +559,16 @@ function deselectRoom() {
 
 var playing = false;
 document.getElementById("playPause").addEventListener("click", function() {
-    if (!playing) {
-        playSong(false);
-        document.getElementById("playPause").innerHTML = "Pause";
-    } else {
-        audio.pause();
-        document.getElementById("playPause").innerHTML = "Play";        
+    if (mode == 2) {
+        if (!playing) {
+            playSong(false);
+            document.getElementById("playPause").innerHTML = "Pause";
+        } else {
+            audio.pause();
+            playing = false;
+            document.getElementById("playPause").innerHTML = "Play";        
+        }
     }
-    playing = !playing;
 });
 
 document.getElementById("next").addEventListener("click", nextSong);
@@ -578,19 +580,25 @@ document.getElementById("prev").addEventListener("click", function() {
 });
 
 function playSong(reload) {
-    if (reload || audio.src === "") {
-        console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " + 
-                    playlist.tracks.items[playListIndex].name);
-        audio.src = playlist.tracks.items[playListIndex].preview_url;
-    }
-    if (!reload || audio.playing) {
-        audio.play();
+    if (mode == 2) {
+        audio.volume = slider.value/100;
+        if (reload || audio.src === "") {
+            console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " + 
+                        playlist.tracks.items[playListIndex].name);
+            audio.src = playlist.tracks.items[playListIndex].preview_url;
+        }
+        if (!reload || playing) {
+            audio.play();
+            playing = true;
+        }
     }
 }
 
 function nextSong() {
-    playListIndex = (playListIndex + 1) % playlist.tracks.items.length;
-    playSong(true);
+    if (mode == 2) {
+        playListIndex = (playListIndex + 1) % playlist.tracks.items.length;
+        playSong(true);
+    }
 }
 
 // Moving slider (input is not supported in IE10 so need to also do change)
@@ -639,6 +647,9 @@ function addLights(r, roomIndex) {
 
 function moveSlider() {
     var object = canvas.getActiveObject() || bigRoom;
+    if (mode == 2) {
+        audio.volume = slider.value/100;
+    }
     if (object) {
         var isRoom = object.isType("rect");
         if (isRoom) {
