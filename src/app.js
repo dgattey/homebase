@@ -9,7 +9,6 @@ var currPointers = [];
 var floors = [];
 var roomGroups = [];
 var activeTexts = [];
-var tempTexts = [];
 var canvas = new fabric.Canvas('c', {
     selection: false
 });
@@ -438,17 +437,7 @@ document.changeFloor = function(index) {
     }
     currLights = [];
     for (room = 0; room < floors[currentFloor].length; room++) {
-        floors[currentFloor][room].setControlsVisibility({
-            mtr: false,
-            bl: false,
-            br: false,
-            tl: false,
-            tr: false,
-            mt: false,
-            mb: false,
-            ml: false,
-            mr: false
-        });
+        removeControls(floors[currentFloor][room]);
         setColor(floors[currentFloor][room]);
         canvas.add(floors[currentFloor][room]);
         addRoomText(floors[currentFloor][room]); //handles drawing title for changing floors
@@ -505,17 +494,7 @@ document.changeMode = function(index) {
 // Set initial room colors and add current floor
 var prevFloor = currentFloor;
 for (var room = 0; room < floors[currentFloor].length; room++) {
-    floors[currentFloor][room].setControlsVisibility({
-        mtr: false,
-        bl: false,
-        br: false,
-        tl: false,
-        tr: false,
-        mt: false,
-        mb: false,
-        ml: false,
-        mr: false
-    });
+    removeControls(floors[currentFloor][room]);
     setColor(floors[currentFloor][room]);
 
     canvas.add(floors[currentFloor][room]);
@@ -598,17 +577,7 @@ function selectRoom(targetedRoom) {
         lockMovementY: true
     });
     bigRoom.targetedRoom = targetedRoom;
-    bigRoom.setControlsVisibility({
-        mtr: false,
-        bl: false,
-        br: false,
-        tl: false,
-        tr: false,
-        mt: false,
-        mb: false,
-        ml: false,
-        mr: false
-    });
+    removeControls(bigRoom);
     if (mode == 1) {
         var bigRoomLightIndex = currLights.length;
         for (var l = 0; l < bigRoom.lights.length; l++) {
@@ -623,44 +592,25 @@ function selectRoom(targetedRoom) {
     if (targetedRoom.name == "Bathroom") { //weird special case for orienting text
       roomTitle = new fabric.Text("Bath-\nroom", {fontSize: 18,
                                                   fill: '#FFFFFF',
-                                                  fontFamily: 'Helvetica'});
-      roomTitle.set({
-        left: canvas.width / 2,
-        top: 175-height/2 + roomTitle.height / 2,
-        // top: canvas.height / 2,
-        originX: 'center',
-        originY: 'center'});
+                                                  fontFamily: 'Helvetica',
+                                                  selectable: false });
     } else {
       roomTitle = new fabric.Text(targetedRoom.name, {fontSize: 18,
                                                       fill: '#FFFFFF',
-                                                      fontFamily: 'Helvetica'});
-      roomTitle.set({
+                                                      fontFamily: 'Helvetica',
+                                                      selectable: false });
+    }
+    roomTitle.set({
         left: canvas.width / 2,
-        top: 175-height/2 + roomTitle.height / 2,
-        // top: canvas.height / 2,
+        top: canvas.height*0.5-height/2 + roomTitle.height / 2,
         originX: 'center',
         originY: 'center'});
-    }
 
-    // var roomTemp = new fabric.Text(room.temp + "F", {fontSize: 20,
-    //                                            fill: '#FFFFFF',
-    //                                            fontFamily: 'Helvetica',
-    //                                            left: canvas.width / 2,
-    //                                            top: canvas.height / 2,
-    //                                            originX: 'center', 
-    //                                            originY: 'center'});
-
-    // if (targetedRoom.name == "Hallway") {
-    //   roomTemp.set({top: roomTitle.top + 25});
-    // }
-    // canvas.add(roomTemp);
     canvas.add(roomTitle);
 
     activeTexts.push(roomTitle);
-    // tempTexts.push(roomTemp);
     bigRoom.bringToFront();
     roomTitle.bringToFront();
-    // roomTemp.bringToFront();
     if (mode == 1) {
         addLights(bigRoom);
     }
@@ -692,12 +642,8 @@ function deselectRoom() {
       }
     }
 
-    for (i = 0; i < tempTexts.length; i++) {
-      canvas.remove(tempTexts[i]);
-    }
-
-    for (var i2 = 0; i2 < activeTexts.length; i2++) {
-      canvas.remove(activeTexts[i2]); //clear all room titles on deselect
+    for (var i = 0; i < activeTexts.length; i++) {
+      canvas.remove(activeTexts[i]); //clear all room titles on deselect
     }
     activeTexts = [];
     // canvas.remove(activeTexts[activeTexts.length - 1]);
@@ -769,6 +715,20 @@ document.getElementById("g").addEventListener("change", moveSlider);
 document.getElementById("b").addEventListener("input", moveSlider);
 document.getElementById("b").addEventListener("change", moveSlider);
 
+function removeControls(shape) {
+    shape.setControlsVisibility({
+        mtr: false,
+        bl: false,
+        br: false,
+        tl: false,
+        tr: false,
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false
+    });
+}
+
 function addLights(r) {
     for (var light = 0; light < r.lights.length; light++) {
         var l = r.lights[light];
@@ -786,17 +746,7 @@ function addLights(r) {
             lockMovementX: true,
             lockMovementY: true
         });
-        cir.setControlsVisibility({
-            mtr: false,
-            bl: false,
-            br: false,
-            tl: false,
-            tr: false,
-            mt: false,
-            mb: false,
-            ml: false,
-            mr: false
-        });
+        removeControls(cir);
         canvas.add(cir);
         currLights.push(cir);
     }
