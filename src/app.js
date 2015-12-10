@@ -11,6 +11,19 @@ var colors = {
     noTouch: 'rgba(200,200,220, 0.8)'
 };
 
+var spotifyApi = new SpotifyWebApi();
+var audio = new Audio();
+var playlist;
+var playListIndex = 0;
+
+spotifyApi.searchTracks('You and I')
+  .then(function(data) {
+    //console.log('Search by "You and I"', data);
+    playlist = data;
+  }, function(err) {
+    console.error(err);
+  });
+
 var Pointer = function() {
     var circle = new fabric.Circle();
 
@@ -496,6 +509,42 @@ function deselectRoom() {
     }
     canvas.remove(bigRoom);
     bigRoom = undefined;
+}
+
+var playing = false;
+document.getElementById("playPause").addEventListener("click", function() {
+    if (!playing) {
+        playSong(false);
+        document.getElementById("playPause").innerHTML = "Pause";
+    } else {
+        audio.pause();
+        document.getElementById("playPause").innerHTML = "Play";        
+    }
+    playing = !playing;
+});
+
+document.getElementById("next").addEventListener("click", nextSong);
+audio.addEventListener("ended", nextSong);
+
+document.getElementById("prev").addEventListener("click", function() {
+    playListIndex = Math.max(playListIndex - 1, 0);
+    playSong(true);
+});
+
+function playSong(reload) {
+    if (reload || audio.src === "") {
+        console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " + 
+                    playlist.tracks.items[playListIndex].name);
+        audio.src = playlist.tracks.items[playListIndex].preview_url;
+    }
+    if (!reload || audio.playing) {
+        audio.play();
+    }
+}
+
+function nextSong() {
+    playListIndex = (playListIndex + 1) % playlist.tracks.items.length;
+    playSong(true);
 }
 
 // Moving slider (input is not supported in IE10 so need to also do change)
