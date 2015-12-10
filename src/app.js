@@ -163,12 +163,16 @@ Leap.loop(function(frame) {
 Leap.loopController.setBackground(true);
 
 // For the top left menu
-var toggleAppMenu = function() {
+var toggleAppMenu = function(isOpening) {
     var toggleClass = "toggle-app-menu";
     var optionsClasses = document.getElementById("options").classList;
-    if (optionsClasses.contains(toggleClass)) {
+    if (isOpening === undefined){
+      isOpening = !optionsClasses.contains(toggleClass);
+    }
+    if (!isOpening) {
         optionsClasses.remove(toggleClass);
     } else {
+        deselectRoom();
         optionsClasses.add(toggleClass);
     }
 };
@@ -388,7 +392,7 @@ document.changeMode = function(index) {
         slider.value = 0;
     }
 
-    toggleAppMenu();
+    toggleAppMenu(false);
 };
 
 // Set initial room colors and add current floor
@@ -582,6 +586,8 @@ function selectRoom(targetedRoom) {
     } else if (mode == 2) {
         slider.value = targetedRoom.vol;
     }
+
+    toggleAppMenu(false);
 }
 
 function deselectRoom() {
