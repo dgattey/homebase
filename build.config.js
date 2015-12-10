@@ -49,7 +49,8 @@ module.exports = {
     js: [
       'leapjs/leap-*.min.js',
       'leapjs-plugins/**/leap-plugins-*.min.js',
-      'fabric.js/**/fabric.min.js'
+      'fabric.js/**/fabric.min.js',
+      'spotify-web-api-js/**/spotify-web-api.js'
     ],
     css:[
     ]
