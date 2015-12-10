@@ -1,6 +1,8 @@
 var mode = 0;
 var floorMenuOpen = false;
 var appMenuOpen = false;
+var hasChangedMenuOption = false;
+var hasChangedFloorOption = false;
 var currentFloor = 0;
 var currLights = [];
 var currPointers = [];
@@ -129,6 +131,8 @@ Leap.loop(function(frame) {
         if (!fist) closedFist = false;
         var finger = hand.indexFinger;
         var dir = hand.palmNormal;
+        var min = 0.4;
+        var max = 0.6;
 
         // If over menus with fist, open them if closed
         if (!appMenuOpen && overAppMenu && fist) {
@@ -137,21 +141,38 @@ Leap.loop(function(frame) {
             toggleFloorMenu(true);
         }
 
-        // If app menu open & moving fast enough, check palm normal
-        if (appMenuOpen && overAppMenu && !fist) {
-            var min = 0.4;
-            var max = 0.6;
+        // Not over menu but have fist and is open, close it
+        else if (appMenuOpen && hasChangedMenuOption && !overAppMenu) {
+            toggleAppMenu(false);
+        } else if (floorMenuOpen && hasChangedFloorOption && !overFloorMenu) {
+            toggleFloorMenu(false);
+        }
+
+        // If app menu open and hovering over app menu, use normal to change mode
+        else if (appMenuOpen && overAppMenu && !fist) {
+            hasChangedMenuOption = true;
             if (dir[0] > max && dir[1] > -min) {
                 document.changeMode(2); // Music
-                console.log("music");
             }
             else if (dir[0] < min && dir[1] < -max) {
                 document.changeMode(0); // Temp
-                console.log("temp");
             }
             else {
                 document.changeMode(1); // Lights
-                console.log("light");
+            }
+        }
+
+        // If floor menu open and hovering over it, use normal to change floor
+        else if (floorMenuOpen && overFloorMenu && !fist) {
+            hasChangedFloorOption = true;
+            if (dir[0] > -max && dir[1] < -min) {
+                document.changeFloor(1);
+            }
+            else if (dir[0] > min && dir[1] > -max) {
+                document.changeFloor(3);
+            }
+            else {
+                document.changeFloor(2);
             }
         }
         
@@ -198,6 +219,7 @@ Leap.loopController.setBackground(true);
 
 // For the top left menu
 var toggleAppMenu = function(isOpening) {
+    hasChangedMenuOption = false;
     appMenuOpen = isOpening;
     var toggleClass = "toggle-app-menu";
     var optionsClasses = document.getElementById("options-app").classList;
@@ -215,6 +237,7 @@ var toggleAppMenu = function(isOpening) {
 
 // For the top right menu
 var toggleFloorMenu = function(isOpening) {
+    hasChangedFloorOption = false;
     floorMenuOpen = isOpening;
     var toggleClass = "toggle-floor-menu";
     var optionsClasses = document.getElementById("options-floor").classList;
@@ -404,6 +427,8 @@ floors = [
 ];
 
 document.changeFloor = function(index) {
+    if (currentFloor == index-1) return;
+    
     currentFloor = index-1;
     for (var room = 0; room < floors[prevFloor].length; room++) {
         canvas.remove(floors[prevFloor][room]);
