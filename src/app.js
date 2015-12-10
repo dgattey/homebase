@@ -109,8 +109,8 @@ function markIntersections(point) {
  */
 Leap.loop(function(frame) {
     // Creates a pointer for each finger and positions them
-    var notTouching = true;
     var isSelecting = false;
+    var closedFist = true;
 
     // Grab index finger of first hand and use as pointer
     for(var f in frame.hands){
@@ -119,7 +119,7 @@ Leap.loop(function(frame) {
 
         // Get data
         var hand = frame.hands[f];
-        var closedFist = hand.grabStrength > 0.8;
+        if (hand.grabStrength <= 0.9) closedFist = false;
         var finger = hand.indexFinger;
         
         // If there's a finger and no closed fist, show it!
@@ -127,7 +127,7 @@ Leap.loop(function(frame) {
             if (!p) p = currPointers[f] = new Pointer();
             p.getPositionAndRadius(finger);
             p.setState(finger.touchZone, isSelecting);
-            p.show();
+            if (!p.isShown) p.show();
 
             // Set global state variables
             if (!p.notTouching) notTouching = false;
@@ -143,7 +143,7 @@ Leap.loop(function(frame) {
     }
 
     // If no fingers pointing at all, deselect room
-    if (notTouching) deselectRoom();
+    if (closedFist) deselectRoom();
 
     // If any room was selected, mark it as such
     var hasSelection = false;
@@ -482,7 +482,7 @@ function selectRoom(targetedRoom) {
     if (targetedRoom == bigRoom || targetedRoom.isType("circle")) {
         return;
     }
-    if (bigRoom || !targetedRoom) {
+    if (bigRoom) {
         deselectRoom();
     }
 
@@ -522,6 +522,7 @@ function selectRoom(targetedRoom) {
         lockMovementX: true,
         lockMovementY: true
     });
+    bigRoom.targetedRoom = targetedRoom;
     bigRoom.setControlsVisibility({
         mtr: false,
         bl: false,
@@ -691,7 +692,8 @@ function addLights(r, roomIndex) {
 }
 
 function moveSlider() {
-    var object = canvas.getActiveObject() || bigRoom;
+    var targeted = (bigRoom ? bigRoom.targetedRoom : undefined);
+    var object = targeted || canvas.getActiveObject();
     if (mode == 2) {
         audio.volume = slider.value/100;
     }
