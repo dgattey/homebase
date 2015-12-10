@@ -548,6 +548,12 @@ function selectRoom(targetedRoom) {
     if (mode == 1) {
         addLights(bigRoom);
     }
+
+    if (mode === 0) {
+        slider.value = targetedRoom.temp;
+    } else if (mode == 2) {
+        slider.value = targetedRoom.vol;
+    }
 }
 
 function deselectRoom() {
