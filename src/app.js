@@ -360,7 +360,7 @@ document.changeMode = function(index) {
     for (var i = 0; i < activeTexts.length; i++) { //clear old room labels
       canvas.remove(activeTexts[i]);
     }
-
+    activeTexts = [];
     currLights = [];
     for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
         var r =  floors[floor.selectedIndex][room];
@@ -415,7 +415,7 @@ for (var room = 0; room < floors[floor.selectedIndex].length; room++) {
     setColor(floors[floor.selectedIndex][room]);
 
     canvas.add(floors[floor.selectedIndex][room]);
-    addRoomText(floors[floor.selectedIndex][room]);
+    addRoomText(floors[floor.selectedIndex][room]); //draws titles for initial floor plan render
 }
 
 // Changing floors
@@ -441,7 +441,7 @@ floor.addEventListener("change", function() {
         });
         setColor(floors[floor.selectedIndex][room]);
         canvas.add(floors[floor.selectedIndex][room]);
-        addRoomText(floors[floor.selectedIndex][room]);
+        addRoomText(floors[floor.selectedIndex][room]); //handles drawing title for changing floors
         if (mode == 1 && floors[floor.selectedIndex][room].lights !== undefined) {
             addLights(floors[floor.selectedIndex][room], room);
         }
@@ -621,14 +621,15 @@ function deselectRoom() {
     }
 
     for (var i = 0; i < activeTexts.length; i++) {
-      canvas.remove(activeTexts[i]);
+      canvas.remove(activeTexts[i]); //clear all room titles on deselect
     }
+    activeTexts = [];
     // canvas.remove(activeTexts[activeTexts.length - 1]);
     canvas.remove(bigRoom);
 
     for (var r = 0; r < floors[floor.selectedIndex].length; r++) {
       // if (floors[floor.selectedIndex][r].name == bigRoom.name) {
-        addRoomText(floors[floor.selectedIndex][r]);
+        addRoomText(floors[floor.selectedIndex][r]); //redraw all room titles on deselect
       // }
     }
     bigRoom = undefined;
