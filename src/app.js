@@ -387,6 +387,8 @@ document.changeMode = function(index) {
         slider.max = 100;
         slider.value = 0;
     }
+
+    toggleAppMenu();
 };
 
 // Set initial room colors and add current floor
