@@ -15,35 +15,43 @@ We're using a Node.js environment, with Google's Polymer as a frontend library a
 ### Development
 No need to refresh the page! Make a change to any files and Gulp will recompile that file and reload the page for you automatically. Gulp runs a server on port 8888 on localhost. There's a gulpfile.js and build.config.js file that both control how Gulp does its thing. Any changes to those and you'll have to restart Gulp. Shouldn't need to change it too often though. All code is in src/. We're using SASS for easier CSS rules, and Google's Polymer for easier JS/HTML coding.
 
-### TODO
-FOR END OF DAY WEDNESDAY:
-  Have JSFiddle version completed (at least visually) for use in slides
-  Dylan: menu interface and menu page creation 
-  Sam: Lighting interface
-  Colby: Zoom into room
-  Wes: Putting Buttons on Canvas - mood buttons and song icon
-  Alex: Start slides/Reddit/Presentation
+### Script for Presentation
+Colby:
 
-Coding Stuff
-- menu interface creation
-- menu creation for each page
-- room zoom with click
-- intensity dial
-- detail page for each app
-- temperature timeline
-- Spotify integration
-- song change
-- pause/play
-- mood scroll selection
-- individual light selection
-- intensity/color sliders for lights
-- gesture based commands
+HOMEBASE: A gesture-based smarthome system for AR
 
-Finishing Stuff
-- Make slides
-- Make and practice a presentation (150 seconds exactly)
-- Link to comments about work after Reddit post
-- host (Dylan)
+We tried to combine a futuristic AR glasses concept like Google Glass with smart home appliances like nest and Phillips Hue.
+Our idea is that you would be able to bring up a tranculent floorplan whenever you want and easily adjust appliances in your house
+using simple gestures.  Right now, homebase supports changing temperature, modifying lighting, and adjusting music on a per room basis.
 
-Maybe Later
-- multiple room selection
+Sam:
+
+So our app is based on the hope that in the future we'll all have AR glasses and we'll all have tons of smart home appliances.  In that world,
+you shouldn't have to stand up to turn off the lights or be at home to turn off appliances.  There are tons of possibilities for other use
+cases.  For example, using future versions of Homebase, you could be able to look at a TV and have floating controls pop up around it that
+only you can see.
+
+Wes:
+
+Here's our high fidelity mockup of our application, detailing everything one can achieve using homebase. 
+
+The central part of the interface is the floorplan, which will be built by users on an interactive web interface that sends the final plans to your system.
+
+Take notice of the three modes of use:
+climate, lighting, and music.
+
+You can select individual rooms, and modify the temperature, intensity of a light, or volume of the music, depending on mode.
+
+
+Alex:
+
+We posted this on various subreddits about a week ago, and received pretty nice feedback, mainly from a guy who works at Leap Motion.
+
+This one guy, tapzoid, got pretty upset, and there was a heated conversation in which leapmotion_alex fought for the validity of our app!
+
+We ended up getting rid of the preset lighting options in favor of simply modifying light values.
+
+
+Dylan:
+
+Demo!
