@@ -56,6 +56,7 @@ var playlist;
 var playListIndex = 0;
 var songSearch = 'You and I';
 var playing = false;
+var musicThreshold = 1500;
 
 /*
 * Class for drawing a pointer on the canvas. When instantiated, creates a 
@@ -122,96 +123,22 @@ var Pointer = function() {
 */
 Leap.loop(function(frame) {
     time.curr = new Date().getTime();
-    // Creates a pointer for each finger and positions them
-    var isSelecting = false;
-    var closedFist = true;
+    var data = {
+        closedFist: true,
+        isSelecting: false,
+        notTouching: true
+    };
 
-    // Grab index finger of first hand and use as pointer
+    // Handle gestures for each hand
     for(var f in frame.hands){
-        var p = currPointers[f];
-        if (p) p.hide();
-
-        // Get data
-        var hand = frame.hands[f];
-        var overAppMenu = hand.palmPosition[0] < -260 && hand.palmPosition[1] > 370;
-        var overFloorMenu = hand.palmPosition[0] > 260 && hand.palmPosition[1] > 370;
-        var fist = hand.grabStrength > 0.8;
-        var pinched = hand.pinchStrength > 0.8;
-        if (!fist) closedFist = false;
-        var finger = hand.indexFinger;
-        var dir = hand.palmNormal;
-        var min = 0.4;
-        var max = 0.6;
-
-        // If over menus with fist, open them if closed
-        if (!appMenu.open && overAppMenu && fist) {
-            toggleAppMenu(true);
-        } else if (!floorMenu.open && overFloorMenu && fist) {
-            toggleFloorMenu(true);
-        }
-
-        // Not over menu but have fist and is open, close it
-        else if (appMenu.open && appMenu.changed && !overAppMenu && fist) {
-            toggleAppMenu(false);
-        } else if (floorMenu.open && floorMenu.changed && !overFloorMenu && fist) {
-            toggleFloorMenu(false);
-        }
-
-        // If app menu open and hovering over app menu, use normal to change mode
-        else if (appMenu.open && overAppMenu && !fist) {
-            appMenu.changed = true;
-            if (dir[0] > max && dir[1] > -min) {
-                document.changeMode(2); // Music
-            } else if (dir[0] < min && dir[1] < -max) {
-                document.changeMode(0); // Temp
-            } else {
-                document.changeMode(1); // Lights
-            }
-        }
-
-        // If floor menu open and hovering over it, use normal to change floor
-        else if (floorMenu.open && overFloorMenu && !fist) {
-            floorMenu.changed = true;
-            if (dir[0] < -max && dir[1] > -min) {
-                document.changeFloor(1);
-            }
-            else if (dir[0] > -min && dir[1] < -max) {
-                document.changeFloor(3);
-            }
-            else {
-                document.changeFloor(2);
-            }
-        }
-
-        // If a fist and in music mode, playPause
-        if (!fist && pinched && mode == 2 && (!time.lastMusicChange || time.curr - time.lastMusicChange > 1000)) {
-            playPause();
-            time.lastMusicChange = time.curr;
-            continue;
-        }
-
-        // If there's a finger and no closed fist, show it!
-        if (!finger) continue;
-        if (!fist) {
-            if (!p) p = currPointers[f] = new Pointer();
-            p.getPositionAndRadius(finger);
-            p.setState(finger.touchZone, isSelecting);
-            if (!p.isShown) p.show();
-
-            // Set global state variables
-            if (!p.notTouching) notTouching = false;
-            if (p.isTouching) isSelecting = true;
-
-            // If we're hovering with one hand, move sliders based on hand position
-            if (p.isHovering && !isSelecting) {
-                slider.value = scalePercent(p.percentY, slider.min*1.0, slider.max*1.0);
-                moveSlider();
-            }
-        }
+        var p = currPointers[f] || (currPointers[f] = new Pointer());
+        p.hide();
+        data.p = p;
+        handleHand(frame.hands[f], data);
     }
 
     // If no fingers pointing at all, deselect room
-    if (closedFist) deselectRoom();
+    if (data.closedFist) deselectRoom();
 
     // If any room was selected, mark it as such
     var hasSelection = false;
@@ -494,6 +421,79 @@ function setupRooms() {
  * changing floors, modes, or selecting/deselecting rooms
  */
 
+// Open menus if user hovering over them & closed, or hide them if user no longer over but are open
+function toggleMenusAsNecessary(overAppMenu, overFloorMenu) {
+    if (!appMenu.open && overAppMenu) toggleAppMenu(true);
+    else if (!floorMenu.open && overFloorMenu) toggleFloorMenu(true);
+    else if (appMenu.open && appMenu.changed && !overAppMenu) toggleAppMenu(false);
+    else if (floorMenu.open && floorMenu.changed && !overFloorMenu) toggleFloorMenu(false);
+}
+
+// Changes mode or floor depending on type
+function changeAppFloorMode(hand, type) {
+    var dir = hand.palmNormal;
+    var min = 0.4;
+    var max = 0.6;
+    if (type =='mode') {
+        appMenu.changed = true;
+        if (dir[0] > max && dir[1] > -min) document.changeMode(2); // Music
+        else if (dir[0] < min && dir[1] < -max) document.changeMode(0); // Temp
+        else document.changeMode(1); // Lights
+    }
+    else if (type == 'floor') {
+        floorMenu.changed = true;
+        if (dir[0] < -max && dir[1] > -min) document.changeFloor(1);
+        else if (dir[0] > -min && dir[1] < -max) document.changeFloor(3);
+        else document.changeFloor(2);
+    }
+}
+
+// Handles a hand
+function handleHand(hand, data) {
+    var fist = hand.grabStrength > 0.8;
+    var finger = hand.indexFinger;
+    var overAppMenu = hand.palmPosition[0] < -260 && hand.palmPosition[1] > 370;
+    var overFloorMenu = hand.palmPosition[0] > 260 && hand.palmPosition[1] > 370;
+
+    // Pause music if pinched (only gesture with pinch)
+    if (hand.pinchStrength > 0.8) {
+        var musicThresholdPassed = (!time.lastMusicChange || time.curr - time.lastMusicChange > musicThreshold);
+        if (mode == 2 && musicThresholdPassed) {
+            playPause();
+            time.lastMusicChange = time.curr;
+        }
+        return;
+    }
+
+    // Toggle menus as needed (only gestures with fist)
+    if (fist) {
+        toggleMenusAsNecessary(overAppMenu, overFloorMenu);
+        return;
+    }
+    closedFist = false; // Since no fist
+
+    // If app/floor menu open and hovering over menu, use palm normal to change mode/floor
+    if (appMenu.open && overAppMenu) changeAppFloorMode(hand, 'mode');
+    else if (floorMenu.open && overFloorMenu) changeAppFloorMode(hand, 'floor');
+
+    // If there's a finger and no closed fist or pinched, show it!
+    else if (finger) {
+        data.p.getPositionAndRadius(finger);
+        data.p.setState(finger.touchZone, data.isSelecting);
+        if (!data.p.isShown) data.p.show();
+
+        // Set global state variables
+        if (!data.p.notTouching) data.notTouching = false;
+        if (data.p.isTouching) data.isSelecting = true;
+
+        // If we're hovering with one hand, move sliders based on hand position
+        if (data.p.isHovering && !data.isSelecting) {
+            slider.value = scalePercent(data.p.percentY, slider.min*1.0, slider.max*1.0);
+            moveSlider();
+        }
+    }
+}
+
 // Changes between floors (floors range 1-3)
 document.changeFloor = function(index) {
     if (currentFloor == index-1) return; // same as before
@@ -700,7 +700,7 @@ function addBigroom(targetedRoom, size) {
     if (mode == 1) {
         var bigRoomLightIndex = currLights.length;
         for (var l = 0; l < bigRoom.lights.length; l++) {
-            bigRoom.lights[l].radius = bigRoom.lights[l].radius*scale;
+            bigRoom.lights[l].radius = bigRoom.lights[l].radius * size.scale;
             bigRoom.lights[l].indices.currLightIndex = bigRoomLightIndex + l;
         }
     }
