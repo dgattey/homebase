@@ -40,7 +40,12 @@ var floors = [];
 var roomGroups = [];
 var activeTexts = [];
 var playPauseShape;
+
+// Sliders
 var slider = document.getElementById("slider");
+var rSlide = document.getElementById("r");
+var gSlide = document.getElementById("g");
+var bSlide = document.getElementById("b");
 
 // Interface data
 var colors = {
@@ -126,11 +131,13 @@ Leap.loop(function(frame) {
     var data = {
         closedFist: true,
         isSelecting: false,
-        notTouching: true
+        notTouching: true,
+        secondHand: false
     };
 
     // Handle gestures for each hand
     for(var f in frame.hands){
+        if (f > 0) data.secondHand = true; // Keep track that we have a second hand
         var p = currPointers[f] || (currPointers[f] = new Pointer());
         p.hide();
         data.p = p;
@@ -209,15 +216,12 @@ function setupEventListeners() {
     // Sliders
     slider.addEventListener("input", moveSlider);
     slider.addEventListener("change", moveSlider);
-    var r = document.getElementById("r");
-    var g = document.getElementById("g");
-    var b = document.getElementById("b");
-    r.addEventListener("input", moveSlider);
-    r.addEventListener("change", moveSlider);
-    g.addEventListener("input", moveSlider);
-    g.addEventListener("change", moveSlider);
-    b.addEventListener("input", moveSlider);
-    b.addEventListener("change", moveSlider);
+    rSlide.addEventListener("input", moveSlider);
+    rSlide.addEventListener("change", moveSlider);
+    gSlide.addEventListener("input", moveSlider);
+    gSlide.addEventListener("change", moveSlider);
+    bSlide.addEventListener("input", moveSlider);
+    bSlide.addEventListener("change", moveSlider);
 
     // Canvas
     canvas.on('object:selected', function(options){
@@ -485,6 +489,15 @@ function handleHand(hand, data) {
         // Set global state variables
         if (!data.p.notTouching) data.notTouching = false;
         if (data.p.isTouching) data.isSelecting = true;
+
+        // If this is the second hand and we're in lights mode, use it for RGB
+        if (data.secondHand && mode == 1) {
+            rSlide.value = scalePercent(data.p.percentX, rSlide.min*1.0, rSlide.max*1.0);
+            gSlide.value = scalePercent(data.p.percentY, gSlide.min*1.0, gSlide.max*1.0);
+            bSlide.value = scalePercent(data.p.percentZ, bSlide.min*1.0, bSlide.max*1.0);
+            moveSlider();
+            return;
+        }
 
         // If we're hovering with one hand, move sliders based on hand position
         if (data.p.isHovering && !data.isSelecting) {
