@@ -1,13 +1,16 @@
 /*
-* Homebase controller: layout of file
-* 1. Data
-* 2. LEAP event loop
-* 3. Setup and initialization
-...
-* 4. Room functions
-Music functions
-* 5. Helper utilities
-*/
+ * HOMEBASE CONTROLLER
+ * This is the master file for all JS code for Homebase. The file is
+ * organized as follows, with headings for each section
+ * 
+ * 1. Data
+ * 2. LEAP event loop
+ * 3. Setup and initialization
+ * 4. Floorplan & input functions
+ * 5. Room functions
+ * 6. Music functions
+ * 7. Helper utilities
+ */
 
 // State data
 var mode = 0;
@@ -485,6 +488,12 @@ function setupRooms() {
     }
 }
 
+/*
+ * INPUT & FLOORPLAN FUNCTIONS
+ * Functions to manipulate the floorplan and respond to input changes like
+ * changing floors, modes, or selecting/deselecting rooms
+ */
+
 // Changes between floors (floors range 1-3)
 document.changeFloor = function(index) {
     if (currentFloor == index-1) return; // same as before
@@ -554,6 +563,7 @@ document.changeMode = function(index) {
     setupSliders(); // Reset slider values
 };
 
+// Selects a given room
 function selectRoom(targetedRoom) {
     var room;
     if (targetedRoom == bigRoom || targetedRoom.isType("circle")) return; // No selection change
@@ -568,100 +578,54 @@ function selectRoom(targetedRoom) {
 
     // Determine size
     var size = determineRoomSize(targetedRoom);
+
+    // Add room text and bigroom, bringing those to front
     addRoomText(targetedRoom);
-
-    bigRoom = new fabric.Rect({
-        name: targetedRoom.name,
-        width: size.width,
-        height: size.height,
-        left: canvas.width*0.5-size.width/2,
-        top: canvas.height*0.5-size.height/2,
-        fill: targetedRoom.priorColor,
-        originX: 'left',
-        originY: 'top',
-        lights: (targetedRoom.lights === undefined) ? [] : JSON.parse(JSON.stringify(targetedRoom.lights)),
-        lockMovementX: true,
-        lockMovementY: true
-    });
-    bigRoom.targetedRoom = targetedRoom;
-    removeControls(bigRoom);
-    if (mode == 1) {
-        var bigRoomLightIndex = currLights.length;
-        for (var l = 0; l < bigRoom.lights.length; l++) {
-            bigRoom.lights[l].radius = bigRoom.lights[l].radius*scale;
-            bigRoom.lights[l].indices.currLightIndex = bigRoomLightIndex + l;
-        }
-    }
-
-    canvas.add(bigRoom);
-
-    var roomTitle;
-    if (targetedRoom.name == "Bathroom") { //weird special case for orienting text
-        roomTitle = new fabric.Text("Bath-\nroom", {
-            fontSize: 18,
-            fill: '#FFFFFF',
-            fontFamily: 'Helvetica',
-            selectable: false
-        });
-    } else {
-        roomTitle = new fabric.Text(targetedRoom.name, {
-            fontSize: 18,
-            fill: '#FFFFFF',
-            fontFamily: 'Helvetica',
-            selectable: false
-        });
-    }
-    roomTitle.set({
-    left: canvas.width / 2,
-    top: canvas.height*0.5-size.height/2 + roomTitle.height / 2,
-    originX: 'center',
-    originY: 'center'});
-
-    canvas.add(roomTitle);
-
-    activeTexts.push(roomTitle);
+    addBigroom(targetedRoom, size);
+    var roomTitle = createRoomTitle(targetedRoom, size);
     bigRoom.bringToFront();
     roomTitle.bringToFront();
-    if (mode == 1) {
-        addLights(bigRoom);
-    }
 
-    if (mode === 0) {
-        slider.value = targetedRoom.temp;
-    } else if (mode == 2) {
-        slider.value = targetedRoom.vol;
-    }
+    // Based on mode, change slider values to the room's data
+    if (mode == 1) addLights(bigRoom);
+    else if (mode === 0) slider.value = targetedRoom.temp;
+    else if (mode == 2) slider.value = targetedRoom.vol;
 
+    // Toggle menus
     toggleAppMenu(false);
     toggleFloorMenu(false);
 }
 
+// Deselects the current bigroom
 function deselectRoom() {
     if (!bigRoom) return;
 
+    // Reset room colors to prior colors
     var r, i;
     for (r = 0; r < floors[currentFloor].length; r++) {
         var room = floors[currentFloor][r];
         room.set('fill', room.priorColor);
         room.priorColor = undefined;
     }
+
+    // Deal with lights
     var numLights = currLights.length - 1 - bigRoom.lights.length;
-    if (mode == 1) {
-        for (var light = currLights.length - 1; light > numLights; light--) {
-            canvas.remove(currLights[light]);
-            currLights.splice(currLights[light], -1);
-        }
+    if (mode == 1) for (var light = currLights.length - 1; light > numLights; light--) {
+        canvas.remove(currLights[light]);
+        currLights.splice(currLights[light], -1);
     }
 
+    // Deal with texts
     for (var i2 = 0; i2 < activeTexts.length; i2++) {
         canvas.remove(activeTexts[i2]); //clear all room titles on deselect
     }
     activeTexts = [];
-    canvas.remove(bigRoom);
-
     for (var r2 = 0; r2 < floors[currentFloor].length; r2++) {
         addRoomText(floors[currentFloor][r2]); //redraw all room titles on deselect
     }
+
+    // Get rid of bigroom
+    canvas.remove(bigRoom);
     bigRoom = undefined;
 }
 
@@ -712,6 +676,35 @@ function moveSlider() {
         // Make sure to update the active object
         canvas.setActiveObject(object);
     }
+}
+
+// Sets bigroom equal to a new fabric object and adds it to canvas
+function addBigroom(targetedRoom, size) {
+    bigRoom = new fabric.Rect({
+        name: targetedRoom.name,
+        width: size.width,
+        height: size.height,
+        left: canvas.width*0.5-size.width/2,
+        top: canvas.height*0.5-size.height/2,
+        fill: targetedRoom.priorColor,
+        originX: 'left',
+        originY: 'top',
+        lights: (targetedRoom.lights === undefined) ? [] : JSON.parse(JSON.stringify(targetedRoom.lights)),
+        lockMovementX: true,
+        lockMovementY: true
+    });
+    bigRoom.targetedRoom = targetedRoom;
+    removeControls(bigRoom);
+
+    // Make sure lights are good
+    if (mode == 1) {
+        var bigRoomLightIndex = currLights.length;
+        for (var l = 0; l < bigRoom.lights.length; l++) {
+            bigRoom.lights[l].radius = bigRoom.lights[l].radius*scale;
+            bigRoom.lights[l].indices.currLightIndex = bigRoomLightIndex + l;
+        }
+    }
+    canvas.add(bigRoom);
 }
 
 /*
@@ -821,6 +814,35 @@ function determineRoomSize(room) {
     return data;
 }
 
+// Creates a room title fabric object based off a room and size and puts it on canvas
+function createRoomTitle(room, size) {
+    var roomTitle;
+    if (room.name == "Bathroom") { //weird special case for orienting text
+        roomTitle = new fabric.Text("Bath-\nroom", {
+            fontSize: 18,
+            fill: '#FFFFFF',
+            fontFamily: 'Helvetica',
+            selectable: false
+        });
+    } else {
+        roomTitle = new fabric.Text(room.name, {
+            fontSize: 18,
+            fill: '#FFFFFF',
+            fontFamily: 'Helvetica',
+            selectable: false
+        });
+    }
+    roomTitle.set({
+        left: canvas.width / 2,
+        top: canvas.height*0.5-size.height/2 + roomTitle.height / 2,
+        originX: 'center',
+        originY: 'center'
+    });
+    canvas.add(roomTitle);
+    activeTexts.push(roomTitle);
+    return roomTitle;
+}
+
 /*
  * MUSIC FUNCTIONS
  * A collection of functions that deal with music plays and pauses, etc
@@ -880,9 +902,9 @@ function nextSong() {
 }
 
 /*
-* HELPERS
-* Utilities to help simplify code later
-*/
+ * HELPERS
+ * Utilities to help simplify code later
+ */
 
 // Scales percent between a min and max and bounds it
 function scalePercent(percent, min, max) {
