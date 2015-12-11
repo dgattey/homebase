@@ -22,7 +22,7 @@ Currently, you can play just one song throughout the house, controlled by Spotif
 #### Lighting
 Each room has some lights in it that can be controlled by utilizing the same up and down gesture to change brightness. You can also move your other hand in 3D space to change the color of the light. In the future, we'd add the ability to change things on a per-light basis, adding functionality to blend the colors in the room for a nice rainbow effect. This kind of lighting is already possible (though expensive) with Phillips Hue or a similar kind of lighting system, but there's not a great app to control that yet.
 
-Overall, the app worked out pretty well. Ran into some snags, but it fulfilled our goals of creating a simple, solid interface that could control many aspects of a smart home with easy gestures. In the future, we would work on an interface to customize floor plans, deeper integration with music and smart lights, and more indications of data (like text for temperature and album art thumbnails for music). 
+Overall, the app worked out pretty well. Ran into some snags, but it fulfilled our goals of creating a simple, solid interface that could control many aspects of a smart home with easy gestures. Additionally, it's all still fully usable with a mouse! Nice side-effect. In the future, we would work on an interface to customize floor plans, deeper integration with music and smart lights, and more indications of data (like text for temperature and album art thumbnails for music). 
 
 ## Development
 
