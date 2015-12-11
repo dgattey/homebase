@@ -1,51 +1,63 @@
+/*
+* Homebase controller: layout of file
+* 1. Data
+* 2. LEAP event loop
+* 3. Setup and initialization
+...
+* 4. Room functions
+Music functions
+* 5. Helper utilities
+*/
+
+// State data
 var mode = 0;
-var floorMenuOpen = false;
-var appMenuOpen = false;
-var hasChangedMenuOption = false;
-var hasChangedFloorOption = false;
 var currentFloor = 0;
+var prevFloor = currentFloor;
+var appMenu = {
+    open: false,
+    changed: false
+};
+var floorMenu = {
+    open: false,
+    changed: false
+};
+var time = {
+    curr: undefined,
+    lastMusicChange: undefined
+};
+
+// Fabric/canvas data
+var canvas = new fabric.Canvas('c', {
+    selection: false
+});
+var bigRoom;
 var currLights = [];
 var currPointers = [];
 var floors = [];
 var roomGroups = [];
 var activeTexts = [];
-var time = {
-    curr: undefined,
-    lastMusicChange: undefined
-};
-var canvas = new fabric.Canvas('c', {
-    selection: false
-});
+var playPauseShape;
+var slider = document.getElementById("slider");
+
+// Interface data
 var colors = {
     touch: '#C31F30',
-    noTouch: 'rgba(200,200,220, 0.8)'
+    noTouch: 'rgba(200,200,220, 0.8)',
+    gray: rgbToHex(190, 190, 190)
 };
 
+// Music data
 var spotifyApi = new SpotifyWebApi();
 var audio = new Audio();
 var playlist;
 var playListIndex = 0;
+var songSearch = 'You and I';
+var playing = false;
 
-spotifyApi.searchTracks('You and I')
-  .then(function(data) {
-    //console.log('Search by "You and I"', data);
-    playlist = data;
-  }, function(err) {
-    console.error(err);
-  });
-
-var playPauseShape = new fabric.Triangle({
-                          width: 50,
-                          height: 50,
-                          fill: '#C31F30',
-                          strokeWidth: 1,
-                          stroke: rgbToHex(0, 0, 0),
-                          left: canvas.width - 10, 
-                          top: canvas.height - 60,
-                          selectable: false
-                        });
-playPauseShape.set('angle', 90);
-
+/*
+* Class for drawing a pointer on the canvas. When instantiated, creates a 
+* circle. Must be shown to appear on canvas, and it takes LEAP finger data.
+*/
 var Pointer = function() {
     var circle = new fabric.Circle();
 
@@ -53,7 +65,7 @@ var Pointer = function() {
     this.show = function() {
         if (this.notTouching) return; // Not pointing toward canvas
 
-        // Determine if the finger is touching or not
+        // Determine if the finger is touching or hovering
         var color = this.isTouching ? colors.touch : colors.noTouch;
 
         // Set all
@@ -102,32 +114,9 @@ var Pointer = function() {
     };
 };
 
-// Scales percent between a min and max and bounds it
-function scalePercent(percent, min, max) {
-    var value = (max - min) * percent + min;
-    return value < min ? min : value > max ? max : value;
-}
-
-// Scales value between 0 and 1
-function scaleValue(value, min, max) {
-    var percent = (value - min) / (max - min);
-    return percent < 0 ? 0 : percent > 1 ? 1 : percent;
-}
-
-// Loops through all canvas objects and marks if the touch intersects the room
-function markIntersections(point) {
-    var objs = canvas.getObjects();
-    for (var i = objs.length - 1; i >= 0; i--) {
-        var shape = objs[i];
-        if (shape.isType('rect') && shape.containsPoint(point)) {
-            shape.intersects = true;
-        }
-    }
-}
-
 /*
- * LEAP EVENT LOOP - runs on each frame
- */
+* LEAP EVENT LOOP - runs on each frame
+*/
 Leap.loop(function(frame) {
     time.curr = new Date().getTime();
     // Creates a pointer for each finger and positions them
@@ -152,36 +141,34 @@ Leap.loop(function(frame) {
         var max = 0.6;
 
         // If over menus with fist, open them if closed
-        if (!appMenuOpen && overAppMenu && fist) {
+        if (!appMenu.open && overAppMenu && fist) {
             toggleAppMenu(true);
-        } else if (!floorMenuOpen && overFloorMenu && fist) {
+        } else if (!floorMenu.open && overFloorMenu && fist) {
             toggleFloorMenu(true);
         }
 
         // Not over menu but have fist and is open, close it
-        else if (appMenuOpen && hasChangedMenuOption && !overAppMenu && fist) {
+        else if (appMenu.open && appMenu.changed && !overAppMenu && fist) {
             toggleAppMenu(false);
-        } else if (floorMenuOpen && hasChangedFloorOption && !overFloorMenu && fist) {
+        } else if (floorMenu.open && floorMenu.changed && !overFloorMenu && fist) {
             toggleFloorMenu(false);
         }
 
         // If app menu open and hovering over app menu, use normal to change mode
-        else if (appMenuOpen && overAppMenu && !fist) {
-            hasChangedMenuOption = true;
+        else if (appMenu.open && overAppMenu && !fist) {
+            appMenu.changed = true;
             if (dir[0] > max && dir[1] > -min) {
                 document.changeMode(2); // Music
-            }
-            else if (dir[0] < min && dir[1] < -max) {
+            } else if (dir[0] < min && dir[1] < -max) {
                 document.changeMode(0); // Temp
-            }
-            else {
+            } else {
                 document.changeMode(1); // Lights
             }
         }
 
         // If floor menu open and hovering over it, use normal to change floor
-        else if (floorMenuOpen && overFloorMenu && !fist) {
-            hasChangedFloorOption = true;
+        else if (floorMenu.open && overFloorMenu && !fist) {
+            floorMenu.changed = true;
             if (dir[0] < -max && dir[1] > -min) {
                 document.changeFloor(1);
             }
@@ -199,7 +186,7 @@ Leap.loop(function(frame) {
             time.lastMusicChange = time.curr;
             continue;
         }
-        
+
         // If there's a finger and no closed fist, show it!
         if (!finger) continue;
         if (!fist) {
@@ -214,7 +201,6 @@ Leap.loop(function(frame) {
 
             // If we're hovering with one hand, move sliders based on hand position
             if (p.isHovering && !isSelecting) {
-                var slider = document.getElementById("slider");
                 slider.value = scalePercent(p.percentY, slider.min*1.0, slider.max*1.0);
                 moveSlider();
             }
@@ -238,276 +224,80 @@ Leap.loop(function(frame) {
     }
 }).use('screenPosition', {scale: 0.25});
 
-// Sets up Leap options
-Leap.loopController.setBackground(true);
+// Initialize full app!
+initApp();
 
-// For the top left menu
-var toggleAppMenu = function(isOpening) {
-    hasChangedMenuOption = false;
-    appMenuOpen = isOpening;
-    var toggleClass = "toggle-app-menu";
-    var optionsClasses = document.getElementById("options-app").classList;
-    if (isOpening === undefined){
-      isOpening = !optionsClasses.contains(toggleClass);
-    }
-    if (!isOpening) {
-        optionsClasses.remove(toggleClass);
-    } else {
-        toggleFloorMenu(false);
-        deselectRoom();
-        optionsClasses.add(toggleClass);
-    }
-};
+/*
+ * SETUP
+ * Various handlers to initialize different parts of the app 
+ * and the LEAP handler code
+ */
 
-// For the top right menu
-var toggleFloorMenu = function(isOpening) {
-    hasChangedFloorOption = false;
-    floorMenuOpen = isOpening;
-    var toggleClass = "toggle-floor-menu";
-    var optionsClasses = document.getElementById("options-floor").classList;
-    if (isOpening === undefined){
-      isOpening = !optionsClasses.contains(toggleClass);
-    }
-    if (!isOpening) {
-        optionsClasses.remove(toggleClass);
-    } else {
-        toggleAppMenu(false);
-        deselectRoom();
-        optionsClasses.add(toggleClass);
-    }
-};
+function initApp() {
+    // Setup of various parts
+    setupMusic();
+    setupEventListeners();
+    setupSliders();
+    setupRooms();
 
-// Set slider initially
-if (mode === 0) {
-    document.getElementById("mode").innerHTML = "Mode: Temperature";
-    slider.min = 55;
-    slider.max = 85;
-    slider.value = 72;
-} else if (mode == 1) {
-    document.getElementById("mode").innerHTML = "Mode: Lights";
-    slider.min = 0;
-    slider.max = 100;
-    slider.value = 0;
-} else if (mode == 2) {
-    document.getElementById("mode").innerHTML = "Mode: Music";
-    slider.min = 0;
-    slider.max = 100;
-    slider.value = 0;
+    // Leap options
+    Leap.loopController.setBackground(true);
 }
 
-// Define rooms
-floors = [
-  [new fabric.Rect({
-      name: "Kitchen",
-      width: 180,
-      height: 100,
-      left: 200,
-      top: 25,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 20, fracX: 0.80, fracY: 0.5 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Living Room",
-      width: 125,
-      height: 100,
-      left: 70,
-      top: 25,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 15, fracX: 0.5, fracY: 0.75 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Hallway",
-      width: 250,
-      height: 50,
-      left: 70,
-      top: 130,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 10, fracX: 0.75, fracY: 0.5 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Dining Room",
-      width: 250,
-      height: 100,
-      left: 70,
-      top: 185,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 15, fracX: 0.15, fracY: 0.25 }, { radius: 20, fracX: 0.85, fracY: 0.65 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Bathroom",
-      width: 55,
-      height: 155,
-      left: 325,
-      top: 130,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.15 }],
-      lockMovementX: true,
-      lockMovementY: true
-    })
-  ],
+// Fabric and spotify related setup to get music to play
+function setupMusic() {
+    // Create shape for play/pause notification
+    playPauseShape = new fabric.Triangle({
+        width: 50,
+        height: 50,
+        fill: colors.touch,
+        strokeWidth: 1,
+        stroke: rgbToHex(0, 0, 0),
+        left: canvas.width - 10, 
+        top: canvas.height - 60,
+        selectable: false
+    });
+    playPauseShape.set('angle', 90);
 
-  [new fabric.Rect({
-      name: "Bedroom",
-      width: 150,
-      height: 100,
-      left: 70,
-      top: 25,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.25 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Bedroom",
-      width: 155,
-      height: 100,
-      left: 225,
-      top: 25,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.75 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Hallway",
-      width: 310,
-      height: 50,
-      left: 70,
-      top: 130,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 10, fracX: 0.35, fracY: 0.5 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Master Bedroom",
-      width: 250,
-      height: 100,
-      left: 130,
-      top: 185,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 15, fracX: 0.15, fracY: 0.25 }, { radius: 7, fracX: 0.85, fracY: 0.65 }],
-      lockMovementX: true,
-      lockMovementY: true
-    }),
-    new fabric.Rect({
-      name: "Bathroom",
-      width: 55,
-      height: 100,
-      left: 70,
-      top: 185,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
-      lockMovementX: true,
-      lockMovementY: true
-    })
-  ],
+    // Grab the songs we want for the hardcoded search
+    spotifyApi.searchTracks(songSearch)
+    .then(function(data) {
+        playlist = data;
+    }, function(err) {
+        console.error(err);
+    });
+}
 
-  [new fabric.Rect({
-      name: "Attic",
-      width: 310,
-      height: 260,
-      left: 70,
-      top: 25,
-      fill: rgbToHex(100, 100, 100),
-      originX: 'left',
-      originY: 'top',
-      lights: [{ radius: 15, fracX: 0.25, fracY: 0.25 },
-               { radius: 15, fracX: 0.75, fracY: 0.25 },
-               { radius: 15, fracX: 0.25, fracY: 0.75 },
-               { radius: 15, fracX: 0.75, fracY: 0.75 }],
-      lockMovementX: true,
-      lockMovementY: true
-    })
-  ]
-];
+// Sets up the event listeners everything the user may manually interact with
+function setupEventListeners() {
+    // Music related event listeners
+    document.getElementById("playPause").addEventListener("click", playPause);
+    document.getElementById("next").addEventListener("click", nextSong);
+    audio.addEventListener("ended", nextSong);
+    document.getElementById("prev").addEventListener("click", prevSong);
 
-document.changeFloor = function(index) {
-    if (currentFloor == index-1) return;
+    // Sliders
+    slider.addEventListener("input", moveSlider);
+    slider.addEventListener("change", moveSlider);
+    var r = document.getElementById("r");
+    var g = document.getElementById("g");
+    var b = document.getElementById("b");
+    r.addEventListener("input", moveSlider);
+    r.addEventListener("change", moveSlider);
+    g.addEventListener("input", moveSlider);
+    g.addEventListener("change", moveSlider);
+    b.addEventListener("input", moveSlider);
+    b.addEventListener("change", moveSlider);
 
-    audio.pause();
-    playing = false;
-    document.getElementById("playPause").innerHTML = "Play";
-    
-    currentFloor = index-1;
-    for (var room = 0; room < floors[prevFloor].length; room++) {
-        canvas.remove(floors[prevFloor][room]);
-    }
-    for (var l = 0; l < currLights.length; l++) {
-        canvas.remove(currLights[l]);
-    }
-    currLights = [];
-    for (room = 0; room < floors[currentFloor].length; room++) {
-        removeControls(floors[currentFloor][room]);
-        setColor(floors[currentFloor][room]);
-        canvas.add(floors[currentFloor][room]);
-        addRoomText(floors[currentFloor][room]); //handles drawing title for changing floors
-        if (mode == 1 && floors[currentFloor][room].lights !== undefined) {
-            addLights(floors[currentFloor][room], room);
-        }
-    }
-    prevFloor = currentFloor;
-};
+    // Canvas
+    canvas.on('object:selected', function(options){
+        selectRoom(options.target);
+    });
+    canvas.on('selection:cleared', deselectRoom);
+}
 
-document.changeMode = function(index) {
-    if (mode == index) return;
-
-    audio.pause();
-    playing = false;
-    document.getElementById("playPause").innerHTML = "Play";
-    
-    mode = index;
-    for (var l = 0; l < currLights.length; l++) {
-        canvas.remove(currLights[l]);
-    }
-    for (var i = 0; i < activeTexts.length; i++) { //clear old room labels
-      canvas.remove(activeTexts[i]);
-    }
-    activeTexts = [];
-    currLights = [];
-    for (var room = 0; room < floors[currentFloor].length; room++) {
-        var r =  floors[currentFloor][room];
-        var activeRoom = r == canvas.getActiveObject();
-        canvas.remove(r);
-        setColor(r);
-        canvas.add(r);
-        addRoomText(r);
-        if (mode == 1 && r.lights !== undefined) {
-            addLights(r);
-        }
-    }
-
-    deselectRoom();
-
-    var slider = document.getElementById("slider");
+// Make sliders range over the correct values according to mode
+function setupSliders() {
     if (mode === 0) {
         document.getElementById("mode").innerHTML = "Mode: Temperature";
         slider.min = 55;
@@ -524,86 +314,268 @@ document.changeMode = function(index) {
         slider.max = 100;
         slider.value = 0;
     }
+}
+
+// Really ugly, but creates an array for each floor and adds all rooms to it (hardcoded)
+function setupRooms() {
+    // Floor 1
+    floor1 = [];
+    floor1.push(new fabric.Rect({
+        name: "Kitchen",
+        width: 180,
+        height: 100,
+        left: 200,
+        top: 25,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 20, fracX: 0.80, fracY: 0.5 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor1.push(new fabric.Rect({
+        name: "Living Room",
+        width: 125,
+        height: 100,
+        left: 70,
+        top: 25,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 15, fracX: 0.5, fracY: 0.75 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor1.push(new fabric.Rect({
+        name: "Hallway",
+        width: 250,
+        height: 50,
+        left: 70,
+        top: 130,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 10, fracX: 0.75, fracY: 0.5 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor1.push(new fabric.Rect({
+        name: "Dining Room",
+        width: 250,
+        height: 100,
+        left: 70,
+        top: 185,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 15, fracX: 0.15, fracY: 0.25 }, { radius: 20, fracX: 0.85, fracY: 0.65 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor1.push(new fabric.Rect({
+        name: "Bathroom",
+        width: 55,
+        height: 155,
+        left: 325,
+        top: 130,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 10, fracX: 0.5, fracY: 0.15 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+
+    // Floor 2
+    floor2 = [];
+    floor2.push(new fabric.Rect({
+        name: "Bedroom",
+        width: 150,
+        height: 100,
+        left: 70,
+        top: 25,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 10, fracX: 0.5, fracY: 0.25 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor2.push(new fabric.Rect({
+        name: "Bedroom",
+        width: 155,
+        height: 100,
+        left: 225,
+        top: 25,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 10, fracX: 0.5, fracY: 0.75 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor2.push(new fabric.Rect({
+        name: "Hallway",
+        width: 310,
+        height: 50,
+        left: 70,
+        top: 130,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 10, fracX: 0.35, fracY: 0.5 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor2.push(new fabric.Rect({
+        name: "Master Bedroom",
+        width: 250,
+        height: 100,
+        left: 130,
+        top: 185,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 15, fracX: 0.15, fracY: 0.25 }, { radius: 7, fracX: 0.85, fracY: 0.65 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+    floor2.push(new fabric.Rect({
+        name: "Bathroom",
+        width: 55,
+        height: 100,
+        left: 70,
+        top: 185,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 10, fracX: 0.5, fracY: 0.5 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+
+    // Floor 3
+    floor3 = [];
+    floor3.push(new fabric.Rect({
+        name: "Attic",
+        width: 310,
+        height: 260,
+        left: 70,
+        top: 25,
+        fill: rgbToHex(100, 100, 100),
+        originX: 'left',
+        originY: 'top',
+        lights: [{ radius: 15, fracX: 0.25, fracY: 0.25 },
+        { radius: 15, fracX: 0.75, fracY: 0.25 },
+        { radius: 15, fracX: 0.25, fracY: 0.75 },
+        { radius: 15, fracX: 0.75, fracY: 0.75 }],
+        lockMovementX: true,
+        lockMovementY: true
+    }));
+
+    // Add all floors to main floor plan
+    floors = [floor1, floor2, floor3];
+
+    // Set initial room colors and add current floor
+    for (var room = 0; room < floors[currentFloor].length; room++) {
+        removeControls(floors[currentFloor][room]);
+        setColor(floors[currentFloor][room]);
+        canvas.add(floors[currentFloor][room]);
+        addRoomText(floors[currentFloor][room]); //draws titles for initial floor plan render
+    }
+}
+
+// Changes between floors (floors range 1-3)
+document.changeFloor = function(index) {
+    if (currentFloor == index-1) return; // same as before
+    currentFloor = index-1; // save for next time
+
+    // Pause music
+    audio.pause();
+    playing = false;
+    document.getElementById("playPause").innerHTML = "Play";
+
+    // Remove old floors and lights
+    for (var room = 0; room < floors[prevFloor].length; room++) {
+        canvas.remove(floors[prevFloor][room]);
+    }
+    for (var l = 0; l < currLights.length; l++) {
+        canvas.remove(currLights[l]);
+    }
+
+    // Add back in new rooms, lights, and text
+    currLights = [];
+    for (room = 0; room < floors[currentFloor].length; room++) {
+        removeControls(floors[currentFloor][room]);
+        setColor(floors[currentFloor][room]);
+        canvas.add(floors[currentFloor][room]);
+        addRoomText(floors[currentFloor][room]); //handles drawing title for changing floors
+        if (mode == 1 && floors[currentFloor][room].lights !== undefined) {
+            addLights(floors[currentFloor][room], room);
+        }
+    }
+    prevFloor = currentFloor;
 };
 
-// Set initial room colors and add current floor
-var prevFloor = currentFloor;
-for (var room = 0; room < floors[currentFloor].length; room++) {
-    removeControls(floors[currentFloor][room]);
-    setColor(floors[currentFloor][room]);
+// Changes between apps (modes, ranging from 0-2)
+document.changeMode = function(index) {
+    if (mode == index) return; // same as last time
+    mode = index; // new value save
 
-    canvas.add(floors[currentFloor][room]);
-    addRoomText(floors[currentFloor][room]); //draws titles for initial floor plan render
-}
+    // Stop music
+    audio.pause();
+    playing = false;
+    document.getElementById("playPause").innerHTML = "Play";
 
-var bigRoom;
-var gray = rgbToHex(190, 190, 190);
+    // Remove all lights and text
+    for (var l = 0; l < currLights.length; l++) {
+        canvas.remove(currLights[l]);
+    }
+    for (var i = 0; i < activeTexts.length; i++) { //clear old room labels
+        canvas.remove(activeTexts[i]);
+    }
+    activeTexts = [];
+    currLights = [];
 
-canvas.on('object:selected', function(options){
-    selectRoom(options.target);
-});
-canvas.on('selection:cleared', function(options) {
-    deselectRoom();
-});
+    // For each room, reset color, lights, and text
+    for (var room = 0; room < floors[currentFloor].length; room++) {
+        var r =  floors[currentFloor][room];
+        var activeRoom = r == canvas.getActiveObject();
+        canvas.remove(r);
+        setColor(r);
+        canvas.add(r);
+        addRoomText(r);
+        if (mode == 1 && r.lights !== undefined) {
+            addLights(r);
+        }
+    }
 
-function addRoomText(room) {
-  var roomTitle = new fabric.Text(room.name, {fontSize: 18,
-                                              fill: '#FFFFFF',
-                                              fontFamily: 'Helvetica',
-                                              selectable: false});
-  roomTitle.set({
-    left: room.left + (room.width / 2),
-    top: room.top + (room.height / 2),
-    originX: 'center',
-    originY: 'center'});
-
-  if (room.name == "Bathroom") { //weird special case for orienting text
-    roomTitle.set({angle: 90});
-  }
-
-  activeTexts.push(roomTitle);
-  canvas.add(roomTitle);
-}
+    deselectRoom(); // Make sure no rooms selected
+    setupSliders(); // Reset slider values
+};
 
 function selectRoom(targetedRoom) {
     var room;
-    if (targetedRoom == bigRoom || targetedRoom.isType("circle")) {
-        return;
-    }
-    if (bigRoom) {
-        deselectRoom();
-    }
+    if (targetedRoom == bigRoom || targetedRoom.isType("circle")) return; // No selection change
+    if (bigRoom) deselectRoom(); // Different bigroom before
 
     // Save prior colors & set all current colors to gray
     for (r = 0; r < floors[currentFloor].length; r++) {
         room = floors[currentFloor][r];
         if (!room.priorColor) room.priorColor = room.fill;
-        room.set('fill', gray);
+        room.set('fill', colors.gray);
     }
 
-    var canvasWidthFrac = canvas.width*0.65;
-    var canvasHeightFrac = canvas.height*0.65;
-    var width;
-    var height;
-    var widthIfHeightLarger = targetedRoom.width * (canvasHeightFrac / targetedRoom.height);
-    var scale;
-    if (widthIfHeightLarger < canvasWidthFrac){
-        width = widthIfHeightLarger;
-        height = canvasHeightFrac;
-        scale = canvasHeightFrac/targetedRoom.height;
-    } else{
-        width = canvasWidthFrac;
-        height = targetedRoom.height * (canvasWidthFrac / targetedRoom.width);
-        scale = canvasWidthFrac/targetedRoom.width;
-    }
+    // Determine size
+    var size = determineRoomSize(targetedRoom);
     addRoomText(targetedRoom);
 
     bigRoom = new fabric.Rect({
         name: targetedRoom.name,
-        width: width,
-        height: height,
-        left: canvas.width*0.5-width/2,
-        top: canvas.height*0.5-height/2,
+        width: size.width,
+        height: size.height,
+        left: canvas.width*0.5-size.width/2,
+        top: canvas.height*0.5-size.height/2,
         fill: targetedRoom.priorColor,
         originX: 'left',
         originY: 'top',
@@ -625,21 +597,25 @@ function selectRoom(targetedRoom) {
 
     var roomTitle;
     if (targetedRoom.name == "Bathroom") { //weird special case for orienting text
-      roomTitle = new fabric.Text("Bath-\nroom", {fontSize: 18,
-                                                  fill: '#FFFFFF',
-                                                  fontFamily: 'Helvetica',
-                                                  selectable: false });
+        roomTitle = new fabric.Text("Bath-\nroom", {
+            fontSize: 18,
+            fill: '#FFFFFF',
+            fontFamily: 'Helvetica',
+            selectable: false
+        });
     } else {
-      roomTitle = new fabric.Text(targetedRoom.name, {fontSize: 18,
-                                                      fill: '#FFFFFF',
-                                                      fontFamily: 'Helvetica',
-                                                      selectable: false });
+        roomTitle = new fabric.Text(targetedRoom.name, {
+            fontSize: 18,
+            fill: '#FFFFFF',
+            fontFamily: 'Helvetica',
+            selectable: false
+        });
     }
     roomTitle.set({
-        left: canvas.width / 2,
-        top: canvas.height*0.5-height/2 + roomTitle.height / 2,
-        originX: 'center',
-        originY: 'center'});
+    left: canvas.width / 2,
+    top: canvas.height*0.5-size.height/2 + roomTitle.height / 2,
+    originX: 'center',
+    originY: 'center'});
 
     canvas.add(roomTitle);
 
@@ -671,108 +647,134 @@ function deselectRoom() {
     }
     var numLights = currLights.length - 1 - bigRoom.lights.length;
     if (mode == 1) {
-      for (var light = currLights.length - 1; light > numLights; light--) {
-        canvas.remove(currLights[light]);
-        currLights.splice(currLights[light], -1);
-      }
+        for (var light = currLights.length - 1; light > numLights; light--) {
+            canvas.remove(currLights[light]);
+            currLights.splice(currLights[light], -1);
+        }
     }
 
     for (var i2 = 0; i2 < activeTexts.length; i2++) {
-      canvas.remove(activeTexts[i2]); //clear all room titles on deselect
+        canvas.remove(activeTexts[i2]); //clear all room titles on deselect
     }
     activeTexts = [];
-    // canvas.remove(activeTexts[activeTexts.length - 1]);
     canvas.remove(bigRoom);
 
     for (var r2 = 0; r2 < floors[currentFloor].length; r2++) {
-      // if (floors[currentFloor][r].name == bigRoom.name) {
         addRoomText(floors[currentFloor][r2]); //redraw all room titles on deselect
-      // }
     }
     bigRoom = undefined;
 }
 
-var playing = false;
+// Reacts to moving the slider by adding/removing objects and changing global variables
+function moveSlider() {
+    var targeted = (bigRoom ? bigRoom.targetedRoom : undefined);
+    var object = targeted || canvas.getActiveObject();
 
-document.getElementById("playPause").addEventListener("click", playPause);
-
-function playPause() {
-    if (mode == 2) {
-        if (!playing) {
-            playSong(false);
-            document.getElementById("playPause").innerHTML = "Pause";
-        } else {
-            audio.pause();
-            playing = false;
-            document.getElementById("playPause").innerHTML = "Play";
-        }
-    }
-}
-
-document.getElementById("next").addEventListener("click", nextSong);
-audio.addEventListener("ended", nextSong);
-document.getElementById("prev").addEventListener("click", prevSong);
-
-function playSong(reload) {
+    // Make sure to set volume if on type 2
     if (mode == 2) {
         audio.volume = slider.value/100;
-        if (reload || audio.src === "") {
-            console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " +
-                        playlist.tracks.items[playListIndex].name);
-            audio.src = playlist.tracks.items[playListIndex].preview_url;
+    }
+
+    if (object && object.isType("rect")) {
+        if (mode != 1) {
+            canvas.remove(object);
         }
-        if (!reload || playing) {
-            audio.play();
-            canvas.add(playPauseShape);
-            setTimeout(removePlayPauseShape, 1000);
-            playing = true;
+        // Set temp
+        if (mode === 0) {
+            object.set({ temp: slider.value });
+        } 
+
+        // Set lights up
+        else if (mode == 1 && object.lights !== undefined) {
+            for (var l = 0; l < object.lights.length; l++) {
+                object.lights[l].brightness = slider.value;
+                var frac = slider.value/100;
+                object.lights[l].color = rgbToHex(parseInt(Math.floor(document.getElementById("r").value*frac), 10),
+                    parseInt(Math.floor(document.getElementById("g").value*frac), 10),
+                    parseInt(Math.floor(document.getElementById("b").value*frac), 10));
+                canvas.remove(currLights[object.lights[l].indices.currLightIndex]);
+                currLights[object.lights[l].indices.currLightIndex].set({
+                    fill: object.lights[l].color
+                });
+                canvas.add(currLights[object.lights[l].indices.currLightIndex]);
+            }
         }
+        // Set volume
+        else if (mode == 2) {
+            object.set({ vol: slider.value });
+        }
+
+        if (mode != 1) {
+            setColor(object);
+            canvas.add(object);
+        }
+
+        // Make sure to update the active object
+        canvas.setActiveObject(object);
     }
 }
 
-function removePlayPauseShape() {
-    canvas.remove(playPauseShape);
-}
+/*
+ * ROOM FUNCTIONS
+ * A collection of functions that affect a certain room
+ */
 
-function prevSong() {
-    if (mode == 2) {
-        playListIndex = Math.max(playListIndex - 1, 0);
-        playSong(true);
-    }
-}
-
-function nextSong() {
-    if (mode == 2) {
-        playListIndex = (playListIndex + 1) % playlist.tracks.items.length;
-        playSong(true);
-    }
-}
-
-// Moving slider (input is not supported in IE10 so need to also do change)
-slider.addEventListener("input", moveSlider);
-slider.addEventListener("change", moveSlider);
-
-document.getElementById("r").addEventListener("input", moveSlider);
-document.getElementById("r").addEventListener("change", moveSlider);
-document.getElementById("g").addEventListener("input", moveSlider);
-document.getElementById("g").addEventListener("change", moveSlider);
-document.getElementById("b").addEventListener("input", moveSlider);
-document.getElementById("b").addEventListener("change", moveSlider);
-
-function removeControls(shape) {
-    shape.setControlsVisibility({
-        mtr: false,
-        bl: false,
-        br: false,
-        tl: false,
-        tr: false,
-        mt: false,
-        mb: false,
-        ml: false,
-        mr: false
+// Adds the text name for a given room to canvas
+function addRoomText(room) {
+    var roomTitle = new fabric.Text(room.name, {fontSize: 18,
+        fill: '#FFFFFF',
+        fontFamily: 'Helvetica',
+        selectable: false});
+    roomTitle.set({
+        left: room.left + (room.width / 2),
+        top: room.top + (room.height / 2),
+        originX: 'center',
+        originY: 'center'
     });
+
+    if (room.name == "Bathroom") { //weird special case for orienting text
+        roomTitle.set({angle: 90});
+    }
+
+    activeTexts.push(roomTitle);
+    canvas.add(roomTitle);
 }
 
+// Sets the color of a given room
+function setColor(room) {
+    var frac;
+
+    // Temperature
+    if (mode === 0) {
+        if (!room.temp) room.set({
+            temp: 72
+        });
+        frac = (room.temp - 55) / (85 - 55);
+        room.set({
+            fill: rgbToHex(Math.floor(255 * frac), 0, Math.floor(255 * (1 - frac)))
+        });
+    }
+
+    // Lights
+    else if (mode == 1) {
+        room.set({
+            fill: rgbToHex(50, 50, 50)
+        });
+    }
+
+    // Music
+    else if (mode == 2) {
+        if (!room.vol) room.set({
+            vol: 0
+        });
+        frac = (room.vol) / 100;
+        room.set({
+            fill: rgbToHex(Math.floor(frac * 129), Math.floor(frac * 183), Math.floor(frac * 26))
+        });
+    }
+}
+
+// Creates a new circle for each light for a given room
 function addLights(r) {
     for (var light = 0; light < r.lights.length; light++) {
         var l = r.lights[light];
@@ -798,75 +800,171 @@ function addLights(r) {
     }
 }
 
-function moveSlider() {
-    var targeted = (bigRoom ? bigRoom.targetedRoom : undefined);
-    var object = targeted || canvas.getActiveObject();
+// Returns width/height/scale object for size of scaled up version of this room
+function determineRoomSize(room) {
+    var cWFraction = canvas.width*0.65;
+    var cHFraction = canvas.height*0.65;
+    var data = {};
+    var possibleW = room.width * (cHFraction / room.height);
+    if (possibleW < cWFraction)
+        data = {
+            width: possibleW,
+            height: cHFraction,
+            scale: cHFraction/room.height
+        };
+    else 
+        data = {
+            width: cWFraction,
+            height: room.height * (cWFraction / room.width),
+            scale: cWFraction/room.width
+        };
+    return data;
+}
+
+/*
+ * MUSIC FUNCTIONS
+ * A collection of functions that deal with music plays and pauses, etc
+ */
+
+// Toggles between play and pause
+function playPause() {
     if (mode == 2) {
-        audio.volume = slider.value/100;
-    }
-    if (object) {
-        var isRoom = object.isType("rect");
-        if (isRoom) {
-            if (mode != 1) {
-                canvas.remove(object);
-            }
-            if (mode === 0) {
-                object.set({ temp: slider.value });
-            } else if (mode == 1 && object.lights !== undefined) {
-                for (var l = 0; l < object.lights.length; l++) {
-                    object.lights[l].brightness = slider.value;
-                    var frac = slider.value/100;
-                    object.lights[l].color = rgbToHex(parseInt(Math.floor(document.getElementById("r").value*frac), 10),
-                                                      parseInt(Math.floor(document.getElementById("g").value*frac), 10),
-                                                      parseInt(Math.floor(document.getElementById("b").value*frac), 10));
-                    canvas.remove(currLights[object.lights[l].indices.currLightIndex]);
-                    currLights[object.lights[l].indices.currLightIndex].set({
-                        fill: object.lights[l].color
-                    });
-                    canvas.add(currLights[object.lights[l].indices.currLightIndex]);
-                }
-            } else if (mode == 2) {
-                object.set({ vol: slider.value });
-            }
-            if (mode != 1) {
-                setColor(object);
-                canvas.add(object);
-            }
-            canvas.setActiveObject(object);
+        if (!playing) {
+            playSong(false);
+            document.getElementById("playPause").innerHTML = "Pause";
+        } else {
+            audio.pause();
+            playing = false;
+            document.getElementById("playPause").innerHTML = "Play";
         }
     }
 }
 
-function setColor(room) {
-    var frac;
-    if (mode === 0) {
-        if (!room.temp) room.set({
-            temp: 72
-        });
-        frac = (room.temp - 55) / (85 - 55);
-        room.set({
-            fill: rgbToHex(Math.floor(255 * frac), 0, Math.floor(255 * (1 - frac)))
-        });
-    } else if (mode == 1) {
-        room.set({
-            fill: rgbToHex(50, 50, 50)
-        });
-    } else if (mode == 2) {
-        if (!room.vol) room.set({
-            vol: 0
-        });
-        frac = (room.vol) / 100;
-        room.set({
-            fill: rgbToHex(Math.floor(frac * 129), Math.floor(frac * 183), Math.floor(frac * 26))
-        });
+// Plays the song
+function playSong(reload) {
+    if (mode == 2) {
+        audio.volume = slider.value/100;
+        if (reload || audio.src === "") {
+            console.log(playlist.tracks.items[playListIndex].artists[0].name + ": " +
+                playlist.tracks.items[playListIndex].name);
+            audio.src = playlist.tracks.items[playListIndex].preview_url;
+        }
+        if (!reload || playing) {
+            audio.play();
+            canvas.add(playPauseShape);
+            setTimeout(removePlayPauseShape, 1000);
+            playing = true;
+        }
     }
 }
 
+// Removes the play/pause shape from the canvas
+function removePlayPauseShape() {
+    canvas.remove(playPauseShape);
+}
+
+// Switches to previous song
+function prevSong() {
+    if (mode == 2) {
+        playListIndex = Math.max(playListIndex - 1, 0);
+        playSong(true);
+    }
+}
+
+// Switches to next song
+function nextSong() {
+    if (mode == 2) {
+        playListIndex = (playListIndex + 1) % playlist.tracks.items.length;
+        playSong(true);
+    }
+}
+
+/*
+* HELPERS
+* Utilities to help simplify code later
+*/
+
+// Scales percent between a min and max and bounds it
+function scalePercent(percent, min, max) {
+    var value = (max - min) * percent + min;
+    return value < min ? min : value > max ? max : value;
+}
+
+// Scales value between 0 and 1
+function scaleValue(value, min, max) {
+    var percent = (value - min) / (max - min);
+    return percent < 0 ? 0 : percent > 1 ? 1 : percent;
+}
+
+// Loops through all canvas objects and marks if the touch intersects the room
+function markIntersections(point) {
+    var objs = canvas.getObjects();
+    for (var i = objs.length - 1; i >= 0; i--) {
+        var shape = objs[i];
+        if (shape.isType('rect') && shape.containsPoint(point)) {
+            shape.intersects = true;
+        }
+    }
+}
+
+// Toggles top left app menu
+function toggleAppMenu(isOpening) {
+    appMenu.changed = false;
+    appMenu.open = isOpening;
+    var toggleClass = "toggle-app-menu";
+    var optionsClasses = document.getElementById("options-app").classList;
+    if (isOpening === undefined){
+        isOpening = !optionsClasses.contains(toggleClass);
+    }
+    if (!isOpening) {
+        optionsClasses.remove(toggleClass);
+    } else {
+        toggleFloorMenu(false);
+        deselectRoom();
+        optionsClasses.add(toggleClass);
+    }
+}
+
+// Toggles top right floor menu
+function toggleFloorMenu(isOpening) {
+    floorMenu.changed = false;
+    floorMenu.open = isOpening;
+    var toggleClass = "toggle-floor-menu";
+    var optionsClasses = document.getElementById("options-floor").classList;
+    if (isOpening === undefined){
+        isOpening = !optionsClasses.contains(toggleClass);
+    }
+    if (!isOpening) {
+        optionsClasses.remove(toggleClass);
+    } else {
+        toggleAppMenu(false);
+        deselectRoom();
+        optionsClasses.add(toggleClass);
+    }
+}
+
+// Removes the Fabric controls from a given shape so it can't change size
+function removeControls(shape) {
+    shape.setControlsVisibility({
+        mtr: false,
+        bl: false,
+        br: false,
+        tl: false,
+        tr: false,
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false
+    });
+}
+
+// Converts a color component to hex representation
 function componentToHex(c) {
     var hex = c.toString(16);
     return hex.length == 1 ? "0" + hex : hex;
 }
 
+// Converts an RGB color representation to hex representation
 function rgbToHex(r, g, b) {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }

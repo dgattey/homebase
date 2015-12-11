@@ -4,6 +4,8 @@
  */
 
 $accent: #C31F30;
+$width: 500px;
+$padding: 30px;
 
 body, html {
     margin: 0;
@@ -18,7 +20,7 @@ canvas#c {
 }
 
 svg.floor-menu {
-    left: 380px;
+    left: $width - 0.24 * $width;
 }
 
 svg.app-menu, svg.floor-menu {
@@ -103,12 +105,12 @@ svg.app-menu, svg.floor-menu {
     background: $accent;
     display: block;
     padding: 5px 0;
-    max-width: 500px;
+    max-width: $width;
 
     svg.logo {
         display: block;
         margin: auto;
-        max-width: 250px;
+        max-width: $width/2;
 
         .base {
             fill:white;
@@ -128,5 +130,28 @@ svg.app-menu, svg.floor-menu {
         .words{
             fill:white;
         }
+    }
+}
+
+.non-leap {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: $width + $padding;
+    background: white;
+    max-width: $width - 2 * $padding;
+    padding: $padding;
+}
+
+.hints {
+    font-family: 'Lato', 'Open Sans', Helvetica, Arial, sans-serif;
+    display: block;
+    margin-top: $padding;
+    background: white;
+    max-width: $width - 2 * $padding;
+    padding: $padding;
+
+    h1 {
+        font-weight: 600;
     }
 }
