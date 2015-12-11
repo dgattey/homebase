@@ -470,7 +470,7 @@ function handleHand(hand, data) {
         toggleMenusAsNecessary(overAppMenu, overFloorMenu);
         return;
     }
-    closedFist = false; // Since no fist
+    data.closedFist = false; // Since no fist
 
     // If app/floor menu open and hovering over menu, use palm normal to change mode/floor
     if (appMenu.open && overAppMenu) changeAppFloorMode(hand, 'mode');
