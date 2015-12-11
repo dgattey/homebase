@@ -1,5 +1,5 @@
 # Homebase
-A smart home utility powered by LEAP, offering a gesture-based interface for a hypothetical smarthome system. See a demo at http://labs.dylangattey.com/homebase.
+A smart home utility powered by LEAP, offering a gesture-based interface for a hypothetical smarthome system. See a demo at http://labs.dylangattey.com/homebase. Just under a 1000 lines :)
 
 ## Our Vision
 In the future, everyone will have smart appliances and homes that are wired together. There will be tons of different ways to interact with information and devices around you, necessitating a new method of consolidating it into a coherent interface. We envision a singular augmented reality wearable system, in the form of always-on glasses/implants/contact lenses, running this interface. We wrote three demo apps for this project, but we envision many different apps for controlling every aspect of your home. You'll walk around your home, interacting with the wearable using your hands in front of you to gesture. Currently, a Leap Motion is a standin for this sort of interaction. The same gestures could certainly be part of any future system. 
